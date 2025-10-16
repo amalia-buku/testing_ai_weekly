@@ -35,32 +35,48 @@ const PRODUCT_MAPPING = {
     'Saku - Non Insurance': 'Saku - Non Insurance'
 };
 
-// ==================== DYNAMIC DATA LOADING FUNCTIONS ====================
+// ==================== UPDATED FILE LOADING FUNCTIONS ====================
 
-// Load and parse Daily Order JSON file
+// Load and parse Daily Order JSON file using fetch()
 async function loadDailyOrders() {
     try {
-        const fileContent = await window.fs.readFile('Extract - Daily Order.json', { encoding: 'utf8' });
+        console.log('📥 Fetching Extract - Daily Order.json...');
+        const response = await fetch('Extract - Daily Order.json');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const fileContent = await response.text();
         const lines = fileContent.trim().split('\n');
         const orders = lines.map(line => JSON.parse(line));
         console.log(`✅ Loaded ${orders.length} daily orders`);
         return orders;
     } catch (error) {
         console.error('❌ Error loading daily orders:', error);
+        console.error('Make sure "Extract - Daily Order.json" file exists in your repository root');
         return [];
     }
 }
 
-// Load and parse Monthly Target JSON file
+// Load and parse Monthly Target JSON file using fetch()
 async function loadMonthlyTargets() {
     try {
-        const fileContent = await window.fs.readFile('Monthly - Raw Target.json', { encoding: 'utf8' });
+        console.log('📥 Fetching Monthly - Raw Target.json...');
+        const response = await fetch('Monthly - Raw Target.json');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const fileContent = await response.text();
         const lines = fileContent.trim().split('\n');
         const targets = lines.map(line => JSON.parse(line));
         console.log(`✅ Loaded ${targets.length} monthly targets`);
         return targets;
     } catch (error) {
         console.error('❌ Error loading monthly targets:', error);
+        console.error('Make sure "Monthly - Raw Target.json" file exists in your repository root');
         return [];
     }
 }
@@ -108,23 +124,50 @@ function getActualMTD(orders, targetMonth, upToDay, filters = {}) {
         .reduce((sum, order) => sum + parseInt(order.total_trx || 0), 0);
 }
 
-// Get target from raw target data
 function getTargetMTD(targets, targetMonth, positionLevel, productLevel, area = null) {
+    console.log(`🔍 Looking for target: Month=${targetMonth}, Level=${positionLevel}, Product=${productLevel}, Area=${area}`);
+    
+    // Map position levels: Our code uses "Region" but JSON uses "Area" for everything
+    let actualPositionLevel = positionLevel;
+    if (positionLevel === 'Region' || positionLevel === 'Area') {
+        actualPositionLevel = 'Area'; // JSON uses "Area" for both regions and areas
+    }
+    
     const match = targets.find(target => {
+        // Month match
         if (target.month__ !== targetMonth) return false;
-        if (target.position_level !== positionLevel) return false;
+        
+        // Position level match
+        if (target.position_level !== actualPositionLevel) return false;
+        
+        // Product level match
         if (target.product_level !== productLevel) return false;
         
-        // If area specified and position is Region, match the mapped area
-        if (area && positionLevel === 'Region') {
-            const mappedArea = AREA_MAPPING[area];
-            if (target.area !== mappedArea) return false;
+        // Area match
+        if (area) {
+            // For regions, we need to map the area name
+            let targetAreaName = area;
+            
+            if (positionLevel === 'Region') {
+                // Map individual area to its region
+                targetAreaName = AREA_MAPPING[area];
+            }
+            
+            console.log(`   Checking: area=${area}, mapped to=${targetAreaName}, target.area=${target.area}`);
+            
+            if (target.area !== targetAreaName) return false;
         }
         
         return true;
     });
     
-    return match ? parseFloat(match.mtd_target || 0) : 0;
+    if (match) {
+        console.log(`   ✅ Found target: ${match.mtd_target}`);
+        return parseFloat(match.mtd_target || 0);
+    } else {
+        console.log(`   ❌ No target found`);
+        return 0;
+    }
 }
 
 // Calculate achievement percentage
@@ -144,6 +187,15 @@ async function buildMTDDataFromRaw() {
     
     const orders = await loadDailyOrders();
     const targets = await loadMonthlyTargets();
+    // DEBUG: Check what targets were loaded
+    console.log('🔍 Sample targets loaded:');
+    console.log('National All Product:', targets.find(t => 
+        t.position_level === 'National' && t.product_level === 'All Product'
+    ));
+    console.log('Region Java:', targets.find(t => 
+        t.position_level === 'Region' && t.product_level === 'All Product' && t.area === 'Java'
+    ));
+    console.log('First 5 targets:', targets.slice(0, 5));
     const { currentMonth, lastMonth, currentDay } = getCurrentMonthDay();
     
     console.log(`📅 Current Month: ${currentMonth}, Day: ${currentDay}`);
@@ -191,37 +243,54 @@ async function buildMTDDataFromRaw() {
         };
     });
     
-    // 3. REGIONAL LEVEL - Aggregated from Areas
-    const regions = {
-        'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
-        'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
-        'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
+   // 3. REGIONAL LEVEL - Direct regional targets
+const regionMappings = {
+    'EAST REGION': 'East Indo',
+    'JAVA REGION': 'Java', 
+    'SUMATERA REGION': 'Sumatera'
+};
+
+const regionAreas = {
+    'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
+    'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
+    'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
+};
+
+Object.entries(regionAreas).forEach(([regionName, areaList]) => {
+    const actual = getActualMTD(orders, currentMonth, currentDay, { areas: areaList });
+    
+    // Try to find direct regional target
+    const regionalTargetName = regionMappings[regionName];
+    const directMatch = targets.find(t => 
+        t.month__ === currentMonth &&
+        t.position_level === 'Area' &&
+        t.product_level === 'All Product' &&
+        t.area === regionalTargetName
+    );
+    
+    const target = directMatch ? parseFloat(directMatch.mtd_target) : 0;
+    
+    console.log(`🔍 ${regionName} target lookup:`, { regionalTargetName, directMatch, target });
+    
+    const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { areas: areaList });
+    
+    mtdData.regions[regionName] = {
+        actual,
+        target,
+        achievement: calculateAchievement(actual, target),
+        last_month: lastMonthActual,
+        growth: calculateGrowth(actual, lastMonthActual)
     };
-    
-    Object.entries(regions).forEach(([regionName, areaList]) => {
-        const actual = getActualMTD(orders, currentMonth, currentDay, { areas: areaList });
-        const target = areaList.reduce((sum, area) => 
-            sum + getTargetMTD(targets, currentMonth, 'Region', 'All Product', area), 0);
-        const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { areas: areaList });
-        
-        mtdData.regions[regionName] = {
-            actual,
-            target,
-            achievement: calculateAchievement(actual, target),
-            last_month: lastMonthActual,
-            growth: calculateGrowth(actual, lastMonthActual)
-        };
-    });
-    
+});
     // 4. AREA LEVEL - Individual Areas
     const allAreas = [
         'BALI NUSRA', 'JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3',
         'KALIMANTAN', 'SULAWESI', 'SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3'
     ];
-    
+
     allAreas.forEach(area => {
         const actual = getActualMTD(orders, currentMonth, currentDay, { area });
-        const target = getTargetMTD(targets, currentMonth, 'Region', 'All Product', area);
+        const target = getTargetMTD(targets, currentMonth, 'Area', 'All Product', area); // ✅ FIXED: Changed 'Region' to 'Area'
         const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { area });
         
         mtdData.areas[area] = {
@@ -236,7 +305,7 @@ async function buildMTDDataFromRaw() {
     // 5. ANDROID AREA LEVEL - Area × Android Product
     allAreas.forEach(area => {
         const actual = getActualMTD(orders, currentMonth, currentDay, { area, product: 'Android' });
-        const target = getTargetMTD(targets, currentMonth, 'Region', 'Android', area);
+        const target = getTargetMTD(targets, currentMonth, 'Area', 'Android', area); // ✅ FIXED: Changed 'Region' to 'Area'
         const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { area, product: 'Android' });
         
         mtdData.android_areas[`${area} ANDROID`] = {
@@ -247,7 +316,6 @@ async function buildMTDDataFromRaw() {
             growth: calculateGrowth(actual, lastMonthActual)
         };
     });
-    
     console.log('✅ MTD Data built successfully');
     console.log('📊 Sample National Data:', mtdData.national['ALL PRODUCT - NATIONAL']);
     
@@ -849,7 +917,6 @@ function initializeProfessionalNavigation() {
     }
 }
 
-// ENHANCED MTD PERFORMANCE TABLE with Professional Styling
 async function createProfessionalMTDTable() {
     console.log('🚀 Creating Professional MTD Performance Table with Dynamic Data...');
 
@@ -857,6 +924,11 @@ async function createProfessionalMTDTable() {
         // Build MTD data from raw files if not already loaded
         if (!mtdData) {
             mtdData = await buildMTDDataFromRaw();
+        }
+        
+        if (!mtdData) {
+            console.error('❌ MTD data is null - cannot create table');
+            return;
         }
         
         const tbody = document.getElementById('mtdTableBody');
@@ -927,7 +999,7 @@ async function createProfessionalMTDTable() {
                 growth: mtdData.regions['SUMATERA REGION'].growth,
                 type: 'regional'
             },
-            // All 10 areas (in order from data)
+            // All 10 areas
             {
                 name: 'BALI NUSRA',
                 target: mtdData.areas['BALI NUSRA'].target.toLocaleString(),
@@ -1093,7 +1165,7 @@ async function createProfessionalMTDTable() {
 
         allMetrics.forEach((metric, index) => {
             // Add section headers
-            if (index === 4) { // After NATIONAL metrics
+            if (index === 4) {
                 const sectionRow = tbody.insertRow();
                 sectionRow.className = 'section-header-row';
                 const sectionCell = sectionRow.insertCell(0);
@@ -1101,7 +1173,7 @@ async function createProfessionalMTDTable() {
                 sectionCell.innerHTML = '<div class="section-header">Regional Level Performance</div>';
                 sectionCell.className = 'section-header-cell';
             }
-            if (index === 7) { // After REGIONAL metrics
+            if (index === 7) {
                 const sectionRow = tbody.insertRow();
                 sectionRow.className = 'section-header-row';
                 const sectionCell = sectionRow.insertCell(0);
@@ -1109,7 +1181,7 @@ async function createProfessionalMTDTable() {
                 sectionCell.innerHTML = '<div class="section-header">Area Level Performance</div>';
                 sectionCell.className = 'section-header-cell';
             }
-            if (index === 17) { // After AREA metrics
+            if (index === 17) {
                 const sectionRow = tbody.insertRow();
                 sectionRow.className = 'section-header-row';
                 const sectionCell = sectionRow.insertCell(0);
@@ -1120,7 +1192,6 @@ async function createProfessionalMTDTable() {
 
             const row = tbody.insertRow();
 
-            // Apply visual styling based on metric type
             const isNational = metric.type === 'national';
             const isRegional = metric.type === 'regional';
             const isAndroidArea = metric.type === 'android_area';
@@ -1142,7 +1213,6 @@ async function createProfessionalMTDTable() {
 
             // Achievement vs Target
             const achievementCell = row.insertCell(3);
-            const achievementStatus = getAchievementStatus(metric.achievement);
             achievementCell.innerHTML = `${metric.achievement.toFixed(2)}%`;
             achievementCell.className = `achievement-cell ${getAchievementCSSClass(metric.achievement)}`;
 
@@ -1158,6 +1228,7 @@ async function createProfessionalMTDTable() {
         
     } catch (error) {
         console.error('❌ Error creating Professional MTD Performance Table:', error);
+        console.error('Error details:', error.stack);
     }
 }
 
@@ -1430,8 +1501,6 @@ const professionalDataLabelsPlugin = {
 
 // Register the professional plugin
 Chart.register(professionalDataLabelsPlugin);
-
-// Create Regional Line Chart (Multi-line chart showing individual areas within region)
 function createRegionalLineChart(canvasId, regionData, regionName, areaNames, areaColors) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {
@@ -1439,7 +1508,6 @@ function createRegionalLineChart(canvasId, regionData, regionName, areaNames, ar
         return;
     }
 
-    // Clear any existing chart
     if (canvas.chartInstance) {
         canvas.chartInstance.destroy();
     }
@@ -1462,7 +1530,9 @@ function createRegionalLineChart(canvasId, regionData, regionName, areaNames, ar
     const datasets = [];
     areaNames.forEach((areaName, index) => {
         const areaKey = areaKeyMapping[areaName];
-        const areaData = individualVariableData[areaKey];
+        
+        // ✅ FIX: Use individualVariableDataOriginal which is defined globally
+        const areaData = individualVariableDataOriginal[areaKey];
 
         console.log(`🎯 Regional Chart: ${areaName} → ${areaKey} → Data found: ${areaData ? 'YES' : 'NO'}`);
 
@@ -1591,7 +1661,6 @@ function createRegionalLineChart(canvasId, regionData, regionName, areaNames, ar
             }
         });
 
-        // Store chart reference for cleanup
         canvas.chartInstance = chart;
         console.log(`✅ Created professional regional line chart: ${canvasId}`);
 
@@ -2333,8 +2402,10 @@ function enhanceNavigationElements() {
 }
 
 // MAIN DOCUMENT READY EVENT HANDLER with Professional Integration
+// At the bottom of script.js, update this:
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 DOM Content Loaded - Starting Professional MS Channel Analysis v15.0 - Updated with Latest 30-Week Data');
+    console.log('🚀 DOM Content Loaded - Starting MS Channel Analysis');
+    console.log('🌐 Running in web environment (OnRender)');
 
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
@@ -2345,7 +2416,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     try {
-        // Set current date with professional formatting
+        // Set current date
         const currentDate = new Date().toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -2360,28 +2431,54 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize professional navigation FIRST
         initializeProfessionalNavigation();
 
-        // Create Professional MTD Performance Table SECOND
-         await createProfessionalMTDTable();
-        // Create all analyses with professional design THIRD
-        createProfessionalXmRCharts();
-
-        // Create Regional Charts FOURTH
-        createAllRegionalCharts();
-
-        // Create Individual Variable Charts FIFTH
-        createAllIndividualVariableCharts();
+        // CRITICAL: Load MTD data BEFORE creating any charts
+        console.log('⏳ Loading MTD data from JSON files...');
+        mtdData = await buildMTDDataFromRaw();
         
-        // CREATE ANDROID AREA CHARTS SIXTH (NEW)
+        if (!mtdData) {
+            throw new Error('Failed to load MTD data');
+        }
+        
+        console.log('✅ MTD data loaded successfully');
+
+        // Now create all charts and tables
+        await createProfessionalMTDTable();
+        createProfessionalXmRCharts();
+        createAllRegionalCharts();
+        createAllIndividualVariableCharts();
         createAllAndroidAreaCharts();
 
-        // Enhance navigation elements SEVENTH
+        // Enhance navigation elements
         setTimeout(() => {
             enhanceNavigationElements();
         }, 1000);
 
-        console.log('🎉 All professional charts and analyses created successfully with 30-week data v15.0');
+        console.log('🎉 All professional charts and analyses created successfully');
     } catch (error) {
-        console.error('❌ Error during professional initialization:', error);
+        console.error('❌ Error during initialization:', error);
+        
+        // Show user-friendly error message
+        const container = document.querySelector('.container');
+        if (container) {
+            container.innerHTML = `
+                <div style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 12px; padding: 30px; margin: 40px 0;">
+                    <h2 style="color: #dc2626; margin-top: 0;">⚠️ Data Loading Error</h2>
+                    <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+                        Unable to load required data files. Please check:
+                    </p>
+                    <ul style="color: #374151; line-height: 1.8;">
+                        <li>JSON files are in the repository root directory</li>
+                        <li>File names match exactly: "Extract - Daily Order.json" and "Monthly - Raw Target.json"</li>
+                        <li>Files contain valid JSON data</li>
+                        <li>Check browser console (F12) for detailed error messages</li>
+                    </ul>
+                    <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin-top: 20px;">
+                        <strong>Error Details:</strong><br>
+                        <code style="color: #dc2626;">${error.message}</code>
+                    </div>
+                </div>
+            ` + container.innerHTML;
+        }
     }
 });
 
