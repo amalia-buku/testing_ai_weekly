@@ -124,48 +124,63 @@ function getActualMTD(orders, targetMonth, upToDay, filters = {}) {
         .reduce((sum, order) => sum + parseInt(order.total_trx || 0), 0);
 }
 
+// Function in script.js (FIXED VERSION)
 function getTargetMTD(targets, targetMonth, positionLevel, productLevel, area = null) {
     console.log(`🔍 Looking for target: Month=${targetMonth}, Level=${positionLevel}, Product=${productLevel}, Area=${area}`);
-    
-    // Map position levels: Our code uses "Region" but JSON uses "Area" for everything
+
+    // --- FIX 1: CORRECT POSITION LEVEL MAPPING ---
+    // The script's 'Region' level is the Target file's 'Area' level (East Indo, Java, Sumatera).
+    // The script's 'Area' level is the Target file's 'Region' level (Bali Nusra, Java 3, etc.).
     let actualPositionLevel = positionLevel;
-    if (positionLevel === 'Region' || positionLevel === 'Area') {
-        actualPositionLevel = 'Area'; // JSON uses "Area" for both regions and areas
+    if (positionLevel === 'Region') {
+        actualPositionLevel = 'Area'; 
+    } else if (positionLevel === 'Area') {
+        actualPositionLevel = 'Region'; 
     }
-    
+    // 'National' remains 'National', 'Area' becomes 'Region', 'Region' becomes 'Area'
+
     const match = targets.find(target => {
         // Month match
         if (target.month__ !== targetMonth) return false;
-        
-        // Position level match
+
+        // Position level match - use the corrected level
         if (target.position_level !== actualPositionLevel) return false;
-        
+
         // Product level match
         if (target.product_level !== productLevel) return false;
-        
+
         // Area match
         if (area) {
-            // For regions, we need to map the area name
             let targetAreaName = area;
             
-            if (positionLevel === 'Region') {
-                // Map individual area to its region
-                targetAreaName = AREA_MAPPING[area];
+            // --- FIX 2: STANDARDIZE AREA NAME CASING ---
+            // Daily Orders use UPPERCASE (e.g., 'JAVA 3').
+            // Targets use Title Case (e.g., 'Java 3', 'Bali Nusra').
+            if (actualPositionLevel === 'Region') {
+                // This applies to individual areas (Java 1, Java 2, Bali Nusra, etc.)
+                // 1. Convert to lower case: 'JAVA 3' -> 'java 3'
+                targetAreaName = targetAreaName.toLowerCase();
+                // 2. Convert first letter of each word to uppercase: 'java 3' -> 'Java 3', 'bali nusra' -> 'Bali Nusra'
+                targetAreaName = targetAreaName.replace(/\b\w/g, c => c.toUpperCase());
+                
+            } else if (actualPositionLevel === 'Area') {
+                // This applies to Super-Regions (East Indo, Java, Sumatera). 
+                // The area parameter passed in the script here is already the correct super-region name.
+                // We ensure it's Title Cased to match the JSON.
+                targetAreaName = targetAreaName.charAt(0).toUpperCase() + targetAreaName.slice(1).toLowerCase();
             }
-            
-            console.log(`   Checking: area=${area}, mapped to=${targetAreaName}, target.area=${target.area}`);
             
             if (target.area !== targetAreaName) return false;
         }
-        
+
         return true;
     });
-    
+
     if (match) {
         console.log(`   ✅ Found target: ${match.mtd_target}`);
         return parseFloat(match.mtd_target || 0);
     } else {
-        console.log(`   ❌ No target found`);
+        console.log(`   ❌ No target found for ${area || 'National'} (Position Level: ${actualPositionLevel})`);
         return 0;
     }
 }
