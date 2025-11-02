@@ -124,65 +124,1374 @@ function getActualMTD(orders, targetMonth, upToDay, filters = {}) {
         .reduce((sum, order) => sum + parseInt(order.total_trx || 0), 0);
 }
 
-function getTargetMTD(targets, targetMonth, positionLevel, productLevel, area = null) {
-    // 1. DETERMINE THE TARGET JSON'S position_level KEY
-    let targetJSONPositionLevel = '';
-    
-    // If the script is asking for a Super-Region (e.g., 'Java', 'Sumatera')
-    if (positionLevel === 'Area') { 
-        targetJSONPositionLevel = 'Area'; // Target JSON uses "Area" for Super-Regions
-    } 
-    // If the script is asking for a Sub-Area (e.g., 'JAVA 1', 'BALI NUSRA')
-    else if (positionLevel === 'Region') { 
-        targetJSONPositionLevel = 'Region'; // Target JSON uses "Region" for Sub-Areas
-    } 
-    // National level remains 'National'
-    else {
-        targetJSONPositionLevel = positionLevel;
+
+
+// ==================== WEEKLY DATA LOADING FUNCTIONS ====================
+
+// Load and parse Weekly Target JSON file using fetch()
+async function loadWeeklyTargets() {
+    try {
+        console.log('📥 Fetching Weekly - Raw Target.json...');
+        const response = await fetch('Weekly - Raw Target.json');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const fileContent = await response.text();
+        const lines = fileContent.trim().split('\n');
+        const targets = lines.map(line => JSON.parse(line));
+        console.log(`✅ Loaded ${targets.length} weekly targets`);
+        return targets;
+    } catch (error) {
+        console.error('❌ Error loading weekly targets:', error);
+        console.error('Make sure "Weekly - Raw Target.json" file exists in your repository root');
+        return [];
     }
+}
 
-    const match = targets.find(target => {
-        // Filter 1: Month and Product
-        if (target.month__ !== targetMonth) return false;
-        if (target.product_level !== productLevel) return false;
+// Get unique sorted list of weeks from daily orders
+function getUniqueWeeks(orders) {
+    const weekSet = new Set();
+    orders.forEach(order => {
+        if (order.paid_at_jkt_week) {
+            weekSet.add(order.paid_at_jkt_week);
+        }
+    });
+    
+    // Sort weeks chronologically
+    const sortedWeeks = Array.from(weekSet).sort();
+    console.log(`📅 Found ${sortedWeeks.length} unique weeks from ${sortedWeeks[0]} to ${sortedWeeks[sortedWeeks.length - 1]}`);
+    return sortedWeeks;
+}
 
-        // Filter 2: Position Level (using the determined Target JSON key)
-        if (target.position_level !== targetJSONPositionLevel) return false;
+// Convert ISO date to chart label format (M/D/YYYY)
+function formatWeekLabel(isoDate) {
+    // isoDate format: "2024-12-30" or "2025-01-06"
+    const [year, month, day] = isoDate.split('-');
+    return `${parseInt(month)}/${parseInt(day)}/${year}`;
+}
 
-        // Filter 3: Area (The critical part for Regional/Area charts)
-        if (area) {
-            let targetAreaName = area;
+// Get weekly actual orders with filters
+function getWeeklyActual(orders, week, filters = {}) {
+    return orders
+        .filter(order => {
+            // Filter by week
+            if (order.paid_at_jkt_week !== week) return false;
             
-            // --- Casing Standardization ---
-            if (targetJSONPositionLevel === 'Area') {
-                // Case: Super-Region (Java, Sumatera, East Indo)
-                // The name comes from AREA_MAPPING (e.g., 'Java'), just ensure Title Case.
-                targetAreaName = targetAreaName.charAt(0).toUpperCase() + targetAreaName.slice(1).toLowerCase();
-            } 
-            else if (targetJSONPositionLevel === 'Region') {
-                // Case: Sub-Area (Java 1, Bali Nusra, etc.)
-                // The name comes from Daily Orders (e.g., 'JAVA 1'), which is UPPERCASE.
-                // Target JSON uses Title Case (e.g., 'Java 1').
-                
-                // 1. Convert to lower case: 'JAVA 1' -> 'java 1'
-                targetAreaName = targetAreaName.toLowerCase();
-                // 2. Convert first letter of each word to uppercase: 'java 1' -> 'Java 1'
-                targetAreaName = targetAreaName.replace(/\b\w/g, c => c.toUpperCase());
-            }
+            // Filter by area if specified
+            if (filters.area && order.area !== filters.area) return false;
+            
+            // Filter by multiple areas if specified (for regional aggregation)
+            if (filters.areas && !filters.areas.includes(order.area)) return false;
+            
+            // Filter by product if specified
+            if (filters.product && order.clean_product_name !== filters.product) return false;
+            
+            return true;
+        })
+        .reduce((sum, order) => sum + parseInt(order.total_trx || 0), 0);
+}
 
-            // Final check against the target's area name
-            if (target.area !== targetAreaName) return false;
+// Get weekly target with filters
+function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null) {
+    console.log(`🔍 Weekly Target: Week=${week}, Level=${positionLevel}, Product=${productLevel}, Area=${area}`);
+    
+    const match = targets.find(target => {
+        // Week match
+        if (target.week__ !== week) return false;
+        
+        // Position level match
+        if (target.position_level !== positionLevel) return false;
+        
+        // Product level match
+        if (target.product_level !== productLevel) return false;
+        
+        // Area match for Area/Region level
+        if (area && (positionLevel === 'Area' || positionLevel === 'Region')) {
+            if (target.area !== area) return false;
+        }
+        
+        return true;
+    });
+    
+    if (match) {
+        console.log(`   ✅ Found weekly target: ${match.target_per_week}`);
+        return parseFloat(match.target_per_week || 0);
+    } else {
+        console.log(`   ⚠️ No weekly target found`);
+        return 0;
+    }
+}
+// ==================== REAL NATIONAL WEEKLY CHART FUNCTION ====================
+
+async function createRealNationalWeeklyChart() {
+    try {
+        console.log('📊 CREATING MERGED XmR CONTROL CHART...');
+        
+        // Load weekly data if not already loaded
+        if (!window.weeklyData) {
+            console.log('⏳ Weekly data not found, loading now...');
+            window.weeklyData = await buildWeeklyDataFromRaw();
+        }
+        
+        if (!window.weeklyData || !window.weeklyData.national) {
+            throw new Error('Weekly data not available');
+        }
+        
+        const nationalData = window.weeklyData.national['ALL PRODUCT']; 
+        console.log(`✅ Using ${nationalData.weeks.length} weeks of national data`);
+        
+        // Calculate XmR control metrics
+        const metrics = calculateXmRMetrics(nationalData.actualOrders);
+        console.log('📈 XmR Control Metrics:', metrics);
+        
+        // Detect anomalies
+        const anomalies = detectAnomalies(nationalData.actualOrders, metrics);
+        console.log(`🔍 Detected ${anomalies.length} anomalies`);
+        
+        // Find or create canvas
+        const canvas = document.getElementById('nationalWeeklyChart');
+        if (!canvas) {
+            console.error('❌ Canvas element #nationalWeeklyChart not found!');
+            return;
+        }
+        
+        // Destroy existing chart if any
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
+        
+        // ✅ MERGED XmR CHART - Combines X and mR in one visualization
+        const chart = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: nationalData.weeks,
+                datasets: [
+                    // Primary data: Total Orders
+                    {
+                        label: 'Actual Orders',
+                        data: nationalData.actualOrders,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        pointBackgroundColor: nationalData.actualOrders.map((val, idx) => {
+                            // Color points based on anomalies
+                            if (val > metrics.upperNaturalProcessLimit) return '#28a745'; // Green for above upper limit
+                            if (val < metrics.lowerNaturalProcessLimit) return '#dc3545'; // Red for below lower limit
+                            return '#3b82f6'; // Blue for normal
+                        }),
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        yAxisID: 'y',
+                        order: 1
+                    },
+                    {
+                        label: 'Target',
+                        data: nationalData.targets,
+                        borderColor: '#f97316',
+                        backgroundColor: 'transparent',
+                        pointBackgroundColor: '#f97316',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.1,
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    // Control limits for X chart
+                    {
+                        label: 'Upper Control Limit',
+                        data: Array(nationalData.weeks.length).fill(metrics.upperNaturalProcessLimit),
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [8, 4],
+                        pointRadius: 0,
+                        tension: 0,
+                        yAxisID: 'y',
+                        order: 4
+                    },
+                    {
+                        label: 'Center Line (X-bar)',
+                        data: Array(nationalData.weeks.length).fill(metrics.centerLineX),
+                        borderColor: '#E91E63',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [8, 4],
+                        pointRadius: 0,
+                        tension: 0,
+                        yAxisID: 'y',
+                        order: 5
+                    },
+                    {
+                        label: 'Lower Control Limit',
+                        data: Array(nationalData.weeks.length).fill(metrics.lowerNaturalProcessLimit),
+                        borderColor: '#dc2626',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [8, 5],
+                        pointRadius: 0,
+                        tension: 0,
+                        yAxisID: 'y',
+                        order: 6
+                    },
+                    // Moving Range visualization on secondary axis
+                    {
+                        label: 'Moving Range (Variability)',
+                        data: [null, ...metrics.movingRanges], // Pad with null for first week
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                        pointBackgroundColor: '#8b5cf6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.1,
+                        borderWidth: 2,
+                        yAxisID: 'y1',
+                        order: 3,
+                        fill: true
+                    },
+                    {
+                        label: 'mR Upper Limit',
+                        data: [null, ...Array(metrics.movingRanges.length).fill(metrics.upperRangeLimit)],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.5,
+                        borderDash: [4, 4],
+                        pointRadius: 0,
+                        tension: 0,
+                        yAxisID: 'y1',
+                        order: 7
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Total Orders - XmR Statistical Control Chart',
+                        font: {
+                            size: 18,
+                            weight: '700',
+                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        },
+                        color: '#1e293b',
+                        padding: { top: 10, bottom: 20 }
+                    },
+                    subtitle: {
+                        display: true,
+                        text: 'Actual vs Target with Statistical Control Limits & Variability',
+                        font: {
+                            size: 13,
+                            weight: '400',
+                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        },
+                        color: '#64748b',
+                        padding: { bottom: 15 }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 11,
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#374151',
+                            filter: function(legendItem, chartData) {
+                                // Group similar items for cleaner legend
+                                return true;
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#374151',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 2,
+                        padding: 12,
+                        titleFont: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toLocaleString();
+                                }
+                                return label;
+                            },
+                            footer: function(tooltipItems) {
+                                const idx = tooltipItems[0].dataIndex;
+                                const actual = nationalData.actualOrders[idx];
+                                const target = nationalData.targets[idx];
+                                const achievement = ((actual / target) * 100).toFixed(1);
+                                return `Achievement: ${achievement}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Total Orders',
+                            font: {
+                                size: 14,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#374151'
+                        },
+                        beginAtZero: false,
+                        ticks: {
+                            font: {
+                                size: 11,
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#64748b',
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Moving Range (Variability)',
+                            font: {
+                                size: 13,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#8b5cf6'
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 10,
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#8b5cf6',
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false, // Don't draw grid lines for secondary axis
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Week',
+                            font: {
+                                size: 14,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#374151'
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: 10,
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.08)',
+                            drawBorder: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        canvas.chartInstance = chart;
+        console.log('✅ Merged XmR control chart created successfully!');
+        
+        // Update page metrics if elements exist
+        updatePageMetrics(nationalData, metrics, anomalies);
+
+        // Remove separate mR chart creation since it's now merged
+        // The mRCanvas element can be hidden or removed from HTML if desired
+        
+    } catch (error) {
+        console.error('❌ Error creating merged XmR chart:', error);
+    }
+}
+
+
+
+
+// Update page metrics display
+
+// ==================== HELPER FUNCTIONS FOR CHARTS ====================
+
+// Helper: Create X Chart (reusable)
+function createXChart(canvasId, data, metrics, title) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.warn(`⚠️ Canvas ${canvasId} not found`);
+        return;
+    }
+    
+    if (canvas.chartInstance) {
+        canvas.chartInstance.destroy();
+    }
+    
+    const chart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: data.weeks,
+            datasets: [
+                {
+                    label: 'Total Orders',
+                    data: data.actualOrders,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.3,
+                    borderWidth: 3,
+                    fill: false
+                },
+                {
+                    label: 'Target',
+                    data: data.targets,
+                    borderColor: '#f97316',
+                    backgroundColor: 'transparent',
+                    pointBackgroundColor: '#f97316',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'Upper Limit',
+                    data: Array(data.weeks.length).fill(metrics.upperNaturalProcessLimit),
+                    borderColor: '#ef4444',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    tension: 0
+                },
+                {
+                    label: 'Center Line',
+                    data: Array(data.weeks.length).fill(metrics.centerLineX),
+                    borderColor: '#10b981',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    tension: 0
+                },
+                {
+                    label: 'Lower Limit',
+                    data: Array(data.weeks.length).fill(metrics.lowerNaturalProcessLimit),
+                    borderColor: '#ef4444',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                title: { display: false },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        font: { size: 11 },
+                        color: '#374151'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#1e293b',
+                    bodyColor: '#374151',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Total Orders',
+                        font: { size: 12, weight: '600' }
+                    },
+                    beginAtZero: true,
+                    ticks: { font: { size: 10 } },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Week',
+                        font: { size: 12, weight: '600' }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: { size: 9 }
+                    },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                }
+            }
+        }
+    });
+    
+    canvas.chartInstance = chart;
+}
+
+// Helper: Create mR Chart (reusable)
+function createMRChart(canvasId, data, metrics) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.warn(`⚠️ Canvas ${canvasId} not found`);
+        return;
+    }
+    
+    if (canvas.chartInstance) {
+        canvas.chartInstance.destroy();
+    }
+    
+    const chart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: data.weeks.slice(1),
+            datasets: [
+                {
+                    label: 'Moving Range',
+                    data: metrics.movingRanges,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    pointBackgroundColor: '#8b5cf6',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Center Line (mR-bar)',
+                    data: Array(metrics.movingRanges.length).fill(metrics.centerLineMR),
+                    borderColor: '#10b981',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    tension: 0
+                },
+                {
+                    label: 'Upper Range Limit',
+                    data: Array(metrics.movingRanges.length).fill(metrics.upperRangeLimit),
+                    borderColor: '#ef4444',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                title: { display: false },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        font: { size: 11 },
+                        color: '#374151'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#1e293b',
+                    bodyColor: '#374151',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Moving Range',
+                        font: { size: 12, weight: '600' }
+                    },
+                    beginAtZero: true,
+                    ticks: { font: { size: 10 } },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Week',
+                        font: { size: 12, weight: '600' }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: { size: 9 }
+                    },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                }
+            }
+        }
+    });
+    
+    canvas.chartInstance = chart;
+}
+
+// ==================== REGIONAL CHARTS ====================
+
+// Create Regional XmR Charts
+async function createRegionalXmRCharts() {
+    console.log('📊 Creating Regional XmR Charts...');
+    
+    if (!window.weeklyData || !window.weeklyData.regions) {
+        console.error('❌ Regional data not available');
+        return;
+    }
+    
+    const regions = {
+        'EAST REGION': { canvasId: 'eastRegionChart', mrCanvasId: 'eastRegionMRChart' },
+        'JAVA REGION': { canvasId: 'javaRegionChart', mrCanvasId: 'javaRegionMRChart' },
+        'SUMATERA REGION': { canvasId: 'sumateraRegionChart', mrCanvasId: 'sumateraRegionMRChart' }
+    };
+    
+    Object.entries(regions).forEach(([regionName, canvasIds]) => {
+        const regionalData = window.weeklyData.regions[regionName];
+        
+        if (!regionalData) {
+            console.warn(`⚠️ No data for ${regionName}`);
+            return;
+        }
+        
+        const metrics = calculateXmRMetrics(regionalData.actualOrders);
+        const anomalies = detectAnomalies(regionalData.actualOrders, metrics);
+        
+        createXChart(canvasIds.canvasId, regionalData, metrics, `${regionName} - Total Orders`);
+        createMRChart(canvasIds.mrCanvasId, regionalData, metrics);
+        
+        console.log(`   ✅ ${regionName} charts created`);
+    });
+}
+
+// ==================== PRODUCT CHARTS ====================
+
+// Create Product XmR Charts
+async function createProductXmRCharts() {
+    console.log('📊 Creating Product XmR Charts...');
+    
+    if (!window.weeklyData || !window.weeklyData.national) {
+        console.error('❌ Product data not available');
+        return;
+    }
+    
+    const products = {
+        'ANDROID': { canvasId: 'androidChart', mrCanvasId: 'androidMRChart' },
+        'SAKU INSURANCE': { canvasId: 'sakuInsuranceChart', mrCanvasId: 'sakuInsuranceMRChart' },
+        'SAKU NON INSURANCE': { canvasId: 'sakuNonInsuranceChart', mrCanvasId: 'sakuNonInsuranceMRChart' }
+    };
+    
+    Object.entries(products).forEach(([productName, canvasIds]) => {
+        const productData = window.weeklyData.national[productName];
+        
+        if (!productData) {
+            console.warn(`⚠️ No data for ${productName}`);
+            return;
+        }
+        
+        const metrics = calculateXmRMetrics(productData.actualOrders);
+        const anomalies = detectAnomalies(productData.actualOrders, metrics);
+        
+        createXChart(canvasIds.canvasId, productData, metrics, `${productName} - Orders`);
+        createMRChart(canvasIds.mrCanvasId, productData, metrics);
+        
+        console.log(`   ✅ ${productName} charts created`);
+    });
+}
+
+// ==================== AREA CHARTS ====================
+
+// Create Area XmR Charts
+async function createAreaXmRCharts() {
+    console.log('📊 Creating Area XmR Charts...');
+    
+    if (!window.weeklyData || !window.weeklyData.areas) {
+        console.error('❌ Area data not available');
+        return;
+    }
+    
+    const areaCanvasMapping = {
+        'BALI NUSRA': { canvasId: 'baliNusraChart', mrCanvasId: 'baliNusraMRChart' },
+        'JAKARTA': { canvasId: 'jakartaChart', mrCanvasId: 'jakartaMRChart' },
+        'JAVA 1': { canvasId: 'java1Chart', mrCanvasId: 'java1MRChart' },
+        'JAVA 2': { canvasId: 'java2Chart', mrCanvasId: 'java2MRChart' },
+        'JAVA 3': { canvasId: 'java3Chart', mrCanvasId: 'java3MRChart' },
+        'KALIMANTAN': { canvasId: 'kalimantanChart', mrCanvasId: 'kalimantanMRChart' },
+        'SULAWESI': { canvasId: 'sulawesiChart', mrCanvasId: 'sulawesiMRChart' },
+        'SUMATERA 1': { canvasId: 'sumatera1Chart', mrCanvasId: 'sumatera1MRChart' },
+        'SUMATERA 2': { canvasId: 'sumatera2Chart', mrCanvasId: 'sumatera2MRChart' },
+        'SUMATERA 3': { canvasId: 'sumatera3Chart', mrCanvasId: 'sumatera3MRChart' }
+    };
+    
+    Object.entries(areaCanvasMapping).forEach(([areaName, canvasIds]) => {
+        const areaData = window.weeklyData.areas[areaName];
+        
+        if (!areaData) {
+            console.warn(`⚠️ No data for ${areaName}`);
+            return;
+        }
+        
+        const metrics = calculateXmRMetrics(areaData.actualOrders);
+        const anomalies = detectAnomalies(areaData.actualOrders, metrics);
+        
+        createXChart(canvasIds.canvasId, areaData, metrics, `${areaName} - Total Orders`);
+        createMRChart(canvasIds.mrCanvasId, areaData, metrics);
+        
+        console.log(`   ✅ ${areaName} charts created`);
+    });
+}
+
+// ==================== ANDROID AREA CHARTS ====================
+
+// Create Android Area XmR Charts
+async function createAndroidAreaXmRCharts() {
+    console.log('📊 Creating Android Area XmR Charts...');
+    
+    if (!window.weeklyData || !window.weeklyData.androidAreas) {
+        console.error('❌ Android Area data not available');
+        return;
+    }
+    
+   const androidAreaCanvasMapping = {
+    'BALI NUSRA': { canvasId: 'androidBaliNusraChart', mrCanvasId: 'androidBaliNusraMRChart' },
+    'JAKARTA': { canvasId: 'androidJakartaChart', mrCanvasId: 'androidJakartaMRChart' },
+    'JAVA 1': { canvasId: 'androidJava1Chart', mrCanvasId: 'androidJava1MRChart' },
+    'JAVA 2': { canvasId: 'androidJava2Chart', mrCanvasId: 'androidJava2MRChart' },
+    'JAVA 3': { canvasId: 'androidJava3Chart', mrCanvasId: 'androidJava3MRChart' },
+    'KALIMANTAN': { canvasId: 'androidKalimantanChart', mrCanvasId: 'androidKalimantanMRChart' },
+    'SULAWESI': { canvasId: 'androidSulawesiChart', mrCanvasId: 'androidSulawesiMRChart' },
+    'SUMATERA 1': { canvasId: 'androidSumatera1Chart', mrCanvasId: 'androidSumatera1MRChart' },
+    'SUMATERA 2': { canvasId: 'androidSumatera2Chart', mrCanvasId: 'androidSumatera2MRChart' },
+    'SUMATERA 3': { canvasId: 'androidSumatera3Chart', mrCanvasId: 'androidSumatera3MRChart' }
+};
+    
+    Object.entries(androidAreaCanvasMapping).forEach(([areaName, canvasIds]) => {
+        const androidAreaData = window.weeklyData.androidAreas[areaName];
+        
+        if (!androidAreaData) {
+            console.warn(`⚠️ No data for ${areaName} Android`);
+            return;
+        }
+        
+        const metrics = calculateXmRMetrics(androidAreaData.actualOrders);
+        const anomalies = detectAnomalies(androidAreaData.actualOrders, metrics);
+        
+        createXChart(canvasIds.canvasId, androidAreaData, metrics, `${areaName} - Android Orders`);
+        createMRChart(canvasIds.mrCanvasId, androidAreaData, metrics);
+        
+        console.log(`   ✅ ${areaName} Android charts created`);
+    });
+}
+
+// ========================================================================
+// NEW FUNCTION: Create Regional Breakdown Charts
+// Shows individual area trends within each region
+// Uses the dynamic weeklyData.areas structure
+// PASTE THIS AFTER THE createAndroidAreaXmRCharts FUNCTION
+// ========================================================================
+
+// Create Regional Breakdown Charts (Individual Area Trends)
+async function createRegionalBreakdownCharts() {
+    console.log('📊 Creating Regional Breakdown Charts...');
+    
+    if (!window.weeklyData || !window.weeklyData.areas) {
+        console.error('❌ Area data not available for regional breakdowns');
+        return;
+    }
+    
+    // Define regions with their areas
+    const regions = {
+        'EAST REGION': {
+            canvasId: 'eastRegionLineChart',
+            areas: ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
+            colors: ['#3b82f6', '#ef4444', '#f59e0b']
+        },
+        'JAVA REGION': {
+            canvasId: 'javaRegionLineChart',
+            areas: ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
+            colors: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981']
+        },
+        'SUMATERA REGION': {
+            canvasId: 'sumateraRegionLineChart',
+            areas: ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3'],
+            colors: ['#3b82f6', '#ef4444', '#f59e0b']
+        }
+    };
+    
+    Object.entries(regions).forEach(([regionName, config]) => {
+        const canvas = document.getElementById(config.canvasId);
+        
+        if (!canvas) {
+            console.warn(`⚠️ Canvas ${config.canvasId} not found`);
+            return;
+        }
+        
+        // Destroy existing chart
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
+        
+        // Create datasets for each area
+        const datasets = [];
+        
+        config.areas.forEach((areaName, index) => {
+            const areaData = window.weeklyData.areas[areaName];
+            
+            if (!areaData) {
+                console.warn(`⚠️ No data for ${areaName}`);
+                return;
+            }
+            
+            datasets.push({
+                label: areaName,
+                data: areaData.actualOrders,
+                borderColor: config.colors[index],
+                backgroundColor: config.colors[index],
+                pointBackgroundColor: config.colors[index],
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: false,
+                tension: 0.1,
+                borderWidth: 3
+            });
+        });
+        
+        // Create the chart
+        const chart = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: window.weeklyData.areas[config.areas[0]].weeks,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${regionName.replace(' REGION', '')} Region - Individual Area Trends`,
+                        font: {
+                            size: 16,
+                            weight: 'bold',
+                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        },
+                        color: '#1e293b',
+                        padding: 20
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            font: { 
+                                size: 12, 
+                                weight: '500',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            padding: 15,
+                            color: '#374151'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#374151',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Orders',
+                            font: {
+                                size: 14,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#374151'
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 11 },
+                            color: '#64748b',
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Week',
+                            font: {
+                                size: 14,
+                                weight: '600',
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            },
+                            color: '#374151'
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: { size: 9 },
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        canvas.chartInstance = chart;
+        console.log(`   ✅ ${regionName} breakdown chart created`);
+    });
+    
+    console.log('✅ All regional breakdown charts created successfully!');
+}
+
+function updatePageMetrics(data, metrics, anomalies) {
+    try {
+        // Current Week
+        const currentWeekElement = document.getElementById('currentWeek');
+        if (currentWeekElement && data.actualOrders.length > 0) {
+            currentWeekElement.textContent = data.actualOrders[data.actualOrders.length - 1].toLocaleString();
+        }
+        
+        // Previous Week
+        const previousWeekElement = document.getElementById('previousWeek');
+        if (previousWeekElement && data.actualOrders.length > 1) {
+            previousWeekElement.textContent = data.actualOrders[data.actualOrders.length - 2].toLocaleString();
+        }
+        
+        // Center Line
+        const centerLineElement = document.getElementById('centerLine');
+        if (centerLineElement) {
+            centerLineElement.textContent = metrics.centerLineX.toFixed(0);  // ✅ Changed from centerLine
         }
 
-        return true; // Match found
-    });
+        // Upper Limit
+        const upperLimitElement = document.getElementById('upperLimit');
+        if (upperLimitElement) {
+            upperLimitElement.textContent = metrics.upperNaturalProcessLimit.toFixed(0);  // ✅ Changed from upperLimit
+        }
 
+        // Lower Limit
+        const lowerLimitElement = document.getElementById('lowerLimit');
+        if (lowerLimitElement) {
+            upperLimitElement.textContent = metrics.lowerNaturalProcessLimit.toFixed(0);  // ✅ Changed from lowerLimit
+        }
+        
+        // Process Status
+        const processStatusElement = document.getElementById('processStatus');
+        if (processStatusElement) {
+            if (anomalies.length > 0) {
+                processStatusElement.textContent = 'Anomalies Detected';
+                processStatusElement.className = 'status-anomaly';
+            } else {
+                processStatusElement.textContent = 'In Control';
+                processStatusElement.className = 'status-normal';
+            }
+        }
+        
+        console.log('✅ Page metrics updated');
+    } catch (error) {
+        console.error('⚠️ Error updating page metrics:', error);
+    }
+}
+
+// Calculate XmR control metrics
+function calculateXmRMetrics(data) {
+    // Calculate X-bar (mean)
+    const mean = data.reduce((sum, val) => sum + val, 0) / data.length;
+    
+    // Calculate moving ranges
+    const mR = [];
+    for (let i = 1; i < data.length; i++) {
+        mR.push(Math.abs(data[i] - data[i - 1]));
+    }
+    
+    // Calculate average moving range (mR-bar)
+    const mRBar = mR.reduce((sum, val) => sum + val, 0) / mR.length;
+    
+    // Calculate control limits using d2 constant (1.128 for n=2)
+    const d2 = 1.128;
+    const upperLimit = mean + (2.66 * mRBar);
+    const lowerLimit = Math.max(0, mean - (2.66 * mRBar));
+    
+    return {
+        centerLine: Math.round(mean),
+        upperLimit: Math.round(upperLimit),
+        lowerLimit: Math.round(lowerLimit),
+        mRBar: Math.round(mRBar)
+    };
+}
+
+// Detect anomalies
+function detectAnomalies(data, metrics) {
+    const anomalies = [];
+    
+    data.forEach((value, index) => {
+        if (value > metrics.upperNaturalProcessLimit) {
+            anomalies.push({
+                index: index,
+                type: 'increase',
+                value: value,
+                message: `Point outside control limits: ${value} at index ${index}`
+            });
+        } else if (value < metrics.lowerNaturalProcessLimit) {
+            anomalies.push({
+                index: index,
+                type: 'decrease',
+                value: value,
+                message: `Point outside control limits: ${value} at index ${index}`
+            });
+        }
+    });
+    
+    return anomalies;
+}
+
+
+
+
+// ==================== BUILD WEEKLY DATA FROM RAW FILES ====================
+
+async function buildWeeklyDataFromRaw() {
+    console.log('🚀 Building Weekly data from raw JSON files...');
+    
+    const orders = await loadDailyOrders();
+    const weeklyTargets = await loadWeeklyTargets();
+    
+    if (orders.length === 0 || weeklyTargets.length === 0) {
+        console.error('❌ Failed to load required data files');
+        return null;
+    }
+    
+    // Get list of all unique weeks, sorted chronologically
+    const weeks = getUniqueWeeks(orders);
+    
+    console.log(`📊 Building weekly data for ${weeks.length} weeks...`);
+    
+    const weeklyData = {
+        national: {},
+        regions: {},
+        areas: {},
+        androidAreas: {}
+    };
+    
+    // ==================== NATIONAL LEVEL ====================
+    console.log('📊 Building National Level Weekly Data...');
+    
+    // 1. ALL PRODUCT - NATIONAL
+    const nationalAllProduct = {
+    weeks: weeks.map(formatWeekLabel),
+    actualOrders: [],  // 
+    targets: []
+};
+    
+    weeks.forEach(week => {
+        const actual = getWeeklyActual(orders, week);
+        const target = getWeeklyTarget(weeklyTargets, week, 'National', 'All Product');
+        
+        nationalAllProduct.actualOrders.push(actual);
+        nationalAllProduct.targets.push(target);
+    });
+    
+    weeklyData.national['ALL PRODUCT'] = nationalAllProduct;
+    console.log(`   ✅ ALL PRODUCT - ${nationalAllProduct.actualOrders.length} weeks`);  // ✅
+    
+    // 2. ANDROID - NATIONAL
+    const nationalAndroid = {
+        weeks: weeks.map(formatWeekLabel),
+        actualOrders: [],
+        targets: []
+    };
+    
+    weeks.forEach(week => {
+        const actual = getWeeklyActual(orders, week, { product: 'Android' });
+        const target = getWeeklyTarget(weeklyTargets, week, 'National', 'Android');
+        
+        nationalAndroid.actualOrders.push(actual);
+        nationalAndroid.targets.push(target);
+    });
+    
+    weeklyData.national['ANDROID'] = nationalAndroid;
+    console.log(`   ✅ ANDROID - ${nationalAndroid.actualOrders.length} weeks`);
+    
+    // 3. SAKU INSURANCE - NATIONAL
+    const nationalSakuIns = {
+        weeks: weeks.map(formatWeekLabel),
+        actualOrders: [],
+        targets: []
+    };
+    
+    weeks.forEach(week => {
+        const actual = getWeeklyActual(orders, week, { product: 'Saku - Insurance' });
+        const target = getWeeklyTarget(weeklyTargets, week, 'National', 'Saku - Insurance');
+        
+        nationalSakuIns.actualOrders.push(actual);
+        nationalSakuIns.targets.push(target);
+    });
+    
+    weeklyData.national['SAKU INSURANCE'] = nationalSakuIns;
+    console.log(`   ✅ SAKU INSURANCE - ${nationalSakuIns.actualOrders.length} weeks`);
+    
+    // 4. SAKU NON INSURANCE - NATIONAL
+    const nationalSakuNonIns = {
+        weeks: weeks.map(formatWeekLabel),
+        actualOrders: [],
+        targets: []
+    };
+    
+    weeks.forEach(week => {
+        const actual = getWeeklyActual(orders, week, { product: 'Saku - Non Insurance' });
+        const target = getWeeklyTarget(weeklyTargets, week, 'National', 'Saku - Non Insurance');
+        
+        nationalSakuNonIns.actualOrders.push(actual);
+        nationalSakuNonIns.targets.push(target);
+    });
+    
+    weeklyData.national['SAKU NON INSURANCE'] = nationalSakuNonIns;
+    console.log(`   ✅ SAKU NON INSURANCE - ${nationalSakuNonIns.actualOrders.length} weeks`);
+
+    // ==================== REGIONAL LEVEL ====================
+    console.log('📊 Building Regional Level Weekly Data...');
+    
+    const regions = {
+        'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
+        'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
+        'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
+    };
+    
+    Object.entries(regions).forEach(([regionName, areaList]) => {
+        const regionalData = {
+            weeks: weeks.map(formatWeekLabel),
+            actualOrders: [],
+            targets: []
+        };
+        
+        weeks.forEach(week => {
+            const actual = getWeeklyActual(orders, week, { areas: areaList });
+            const target = areaList.reduce((sum, area) => {
+                return sum + getWeeklyTarget(weeklyTargets, week, 'Region', 'All Product', area);
+            }, 0);
+            
+            regionalData.actualOrders.push(actual);
+            regionalData.targets.push(target);
+        });
+        
+        weeklyData.regions[regionName] = regionalData;
+        console.log(`   ✅ ${regionName} - ${regionalData.actualOrders.length} weeks`);
+    });
+    
+    // ==================== AREA LEVEL ====================
+    console.log('📊 Building Area Level Weekly Data...');
+    
+    const allAreas = [
+        'BALI NUSRA', 'JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3',
+        'KALIMANTAN', 'SULAWESI', 'SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3'
+    ];
+    
+    allAreas.forEach(area => {
+        const areaData = {
+            weeks: weeks.map(formatWeekLabel),
+            actualOrders: [],
+            targets: []
+        };
+        
+        weeks.forEach(week => {
+            const actual = getWeeklyActual(orders, week, { area });
+            const target = getWeeklyTarget(weeklyTargets, week, 'Region', 'All Product', area);
+            
+            areaData.actualOrders.push(actual);
+            areaData.targets.push(target);
+        });
+        
+        weeklyData.areas[area] = areaData;
+        console.log(`   ✅ ${area} - ${areaData.actualOrders.length} weeks`);
+    });
+    
+    // ==================== ANDROID AREA LEVEL ====================
+    console.log('📊 Building Android Area Level Weekly Data...');
+    
+    allAreas.forEach(area => {
+        const androidAreaData = {
+            weeks: weeks.map(formatWeekLabel),
+            actualOrders: [],
+            targets: []
+        };
+        
+        weeks.forEach(week => {
+            const actual = getWeeklyActual(orders, week, { area, product: 'Android' });
+            const target = getWeeklyTarget(weeklyTargets, week, 'Region', 'Android', area);
+            
+            androidAreaData.actualOrders.push(actual);
+            androidAreaData.targets.push(target);
+        });
+        
+        weeklyData.androidAreas[area] = androidAreaData;
+        console.log(`   ✅ ${area} ANDROID - ${androidAreaData.actualOrders.length} weeks`);
+    });
+    
+    console.log('✅ Weekly data built successfully');
+    console.log('📊 Sample National Data:', {
+        weeks: nationalAllProduct.weeks.slice(0, 3),
+        actualOrders: nationalAllProduct.actualOrders.slice(0, 3),
+        targets: nationalAllProduct.targets.slice(0, 3)
+    });
+    
+    return weeklyData;
+}
+
+
+
+
+
+/**
+ * Looks up the Month-to-Date target value from the raw target data.
+ * Fixes: 1. Correctly maps position levels. 2. Standardizes area casing. 3. Returns MTD target.
+ * @param {Array<Object>} targets - The raw Monthly - Raw Target.json data.
+ * @param {string} targetMonth - The month key (e.g., '2025-10-01').
+ * @param {string} positionLevel - The script's requested level ('National', 'Region', or 'Area').
+ * @param {string} productLevel - The product key (e.g., 'All Product').
+ * @param {string} area - The area name (e.g., 'JAVA 1' or 'Java').
+ * @returns {number} The MTD target value, or 0 if no match is found.
+ */
+function getTargetMTD(targets, targetMonth, positionLevel, productLevel, area = null) {
+    console.log(`🔍 Looking for target: Month=${targetMonth}, Level=${positionLevel}, Product=${productLevel}, Area=${area}`);
+    
+    const match = targets.find(target => {
+        // Month match
+        if (target.month__ !== targetMonth) return false;
+        
+        // Position level match
+        if (target.position_level !== positionLevel) return false;
+        
+        // Product level match
+        if (target.product_level !== productLevel) return false;
+        
+        // Area match for regional/area level
+        if (area && positionLevel === 'Region') {
+            if (target.area !== area) return false;
+        }
+        
+        return true;
+    });
+    
     if (match) {
-        // Return the target value as a number
+        // 🔥 ENHANCED LOGGING
+        console.log(`   ✅ Found target match:`, {
+            position_level: match.position_level,
+            product_level: match.product_level,
+            area: match.area || 'N/A',
+            mtd_target: match.mtd_target,
+            full_month_target: match.full_month_target,
+            mtd_target_type: typeof match.mtd_target,
+            mtd_target_parsed: parseFloat(match.mtd_target || 0)
+        });
+        
+        // ✅ Return MTD target
         return parseFloat(match.mtd_target || 0);
     } else {
-        // Critical: Log the exact parameters that failed to find a match
-        console.warn(`❌ Target NOT Found: Month=${targetMonth}, ScriptLevel=${positionLevel}, TargetJSONLevel=${targetJSONPositionLevel}, Product=${productLevel}, Area=${area}`);
+        console.log(`   ❌ No target found for:`, {
+            month: targetMonth,
+            position: positionLevel,
+            product: productLevel,
+            area: area
+        });
         return 0;
     }
 }
@@ -259,54 +1568,37 @@ async function buildMTDDataFromRaw() {
         };
     });
     
-   // 3. REGIONAL LEVEL - Direct regional targets
-const regionMappings = {
-    'EAST REGION': 'East Indo',
-    'JAVA REGION': 'Java', 
-    'SUMATERA REGION': 'Sumatera'
-};
-
-const regionAreas = {
-    'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
-    'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
-    'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
-};
-
-Object.entries(regionAreas).forEach(([regionName, areaList]) => {
-    const actual = getActualMTD(orders, currentMonth, currentDay, { areas: areaList });
-    
-    // Try to find direct regional target
-    const regionalTargetName = regionMappings[regionName];
-    const directMatch = targets.find(t => 
-        t.month__ === currentMonth &&
-        t.position_level === 'Area' &&
-        t.product_level === 'All Product' &&
-        t.area === regionalTargetName
-    );
-    
-    const target = directMatch ? parseFloat(directMatch.mtd_target) : 0;
-    
-    console.log(`🔍 ${regionName} target lookup:`, { regionalTargetName, directMatch, target });
-    
-    const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { areas: areaList });
-    
-    mtdData.regions[regionName] = {
-        actual,
-        target,
-        achievement: calculateAchievement(actual, target),
-        last_month: lastMonthActual,
-        growth: calculateGrowth(actual, lastMonthActual)
+    // 3. REGIONAL LEVEL - Aggregated from Areas
+    const regions = {
+        'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
+        'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
+        'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
     };
-});
+    
+    Object.entries(regions).forEach(([regionName, areaList]) => {
+        const actual = getActualMTD(orders, currentMonth, currentDay, { areas: areaList });
+        const target = areaList.reduce((sum, area) => 
+            sum + getTargetMTD(targets, currentMonth, 'Region', 'All Product', area), 0);
+        const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { areas: areaList });
+        
+        mtdData.regions[regionName] = {
+            actual,
+            target,
+            achievement: calculateAchievement(actual, target),
+            last_month: lastMonthActual,
+            growth: calculateGrowth(actual, lastMonthActual)
+        };
+    });
+    
     // 4. AREA LEVEL - Individual Areas
     const allAreas = [
         'BALI NUSRA', 'JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3',
         'KALIMANTAN', 'SULAWESI', 'SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3'
     ];
-
+    
     allAreas.forEach(area => {
         const actual = getActualMTD(orders, currentMonth, currentDay, { area });
-        const target = getTargetMTD(targets, currentMonth, 'Area', 'All Product', area); // ✅ FIXED: Changed 'Region' to 'Area'
+        const target = getTargetMTD(targets, currentMonth, 'Region', 'All Product', area);
         const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { area });
         
         mtdData.areas[area] = {
@@ -321,7 +1613,7 @@ Object.entries(regionAreas).forEach(([regionName, areaList]) => {
     // 5. ANDROID AREA LEVEL - Area × Android Product
     allAreas.forEach(area => {
         const actual = getActualMTD(orders, currentMonth, currentDay, { area, product: 'Android' });
-        const target = getTargetMTD(targets, currentMonth, 'Area', 'Android', area); // ✅ FIXED: Changed 'Region' to 'Area'
+        const target = getTargetMTD(targets, currentMonth, 'Region', 'Android', area);
         const lastMonthActual = getActualMTD(orders, lastMonth, currentDay, { area, product: 'Android' });
         
         mtdData.android_areas[`${area} ANDROID`] = {
@@ -332,11 +1624,20 @@ Object.entries(regionAreas).forEach(([regionName, areaList]) => {
             growth: calculateGrowth(actual, lastMonthActual)
         };
     });
+    
     console.log('✅ MTD Data built successfully');
     console.log('📊 Sample National Data:', mtdData.national['ALL PRODUCT - NATIONAL']);
     
     return mtdData;
 }
+
+// ==================== DYNAMIC WEEKLY DATA (WILL BE LOADED FROM JSON) ====================
+
+// Global variable to store weekly data (loaded dynamically)
+let weeklyData = null;
+
+// Legacy data structures (WILL BE REPLACED by dynamic data)
+// Keep these for now during transition
 
 const realMSData = [
     { week: '3/3/2025', total_orders: 706 },
@@ -955,226 +2256,226 @@ async function createProfessionalMTDTable() {
 
         tbody.innerHTML = '';
 
-        // Enhanced metrics: NATIONAL (4) + REGIONAL (3) + AREAS (10) + ANDROID AREAS (10) = 27 total metrics
+        // Enhanced metrics with STANDARDIZED FORMATTING
         const allMetrics = [
             // NATIONAL items first (4 items)
             {
                 name: 'ALL PRODUCT - NATIONAL',
-                target: mtdData.national['ALL PRODUCT - NATIONAL'].target.toLocaleString(),
-                actual: mtdData.national['ALL PRODUCT - NATIONAL'].actual.toLocaleString(),
-                achievement: mtdData.national['ALL PRODUCT - NATIONAL'].achievement,
-                growth: mtdData.national['ALL PRODUCT - NATIONAL'].growth,
+                target: Math.ceil(mtdData.national['ALL PRODUCT - NATIONAL'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.national['ALL PRODUCT - NATIONAL'].actual).toLocaleString(),
+                achievement: mtdData.national['ALL PRODUCT - NATIONAL'].achievement.toFixed(1),
+                growth: mtdData.national['ALL PRODUCT - NATIONAL'].growth.toFixed(1),
                 type: 'national'
             },
             {
                 name: 'ANDROID - NATIONAL',
-                target: mtdData.national['ANDROID - NATIONAL'].target.toLocaleString(),
-                actual: mtdData.national['ANDROID - NATIONAL'].actual.toLocaleString(),
-                achievement: mtdData.national['ANDROID - NATIONAL'].achievement,
-                growth: mtdData.national['ANDROID - NATIONAL'].growth,
+                target: Math.ceil(mtdData.national['ANDROID - NATIONAL'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.national['ANDROID - NATIONAL'].actual).toLocaleString(),
+                achievement: mtdData.national['ANDROID - NATIONAL'].achievement.toFixed(1),
+                growth: mtdData.national['ANDROID - NATIONAL'].growth.toFixed(1),
                 type: 'national'
             },
             {
                 name: 'SAKU INSURANCE - NATIONAL',
-                target: mtdData.national['SAKU INSURANCE - NATIONAL'].target.toLocaleString(),
-                actual: mtdData.national['SAKU INSURANCE - NATIONAL'].actual.toLocaleString(),
-                achievement: mtdData.national['SAKU INSURANCE - NATIONAL'].achievement,
-                growth: mtdData.national['SAKU INSURANCE - NATIONAL'].growth,
+                target: Math.ceil(mtdData.national['SAKU INSURANCE - NATIONAL'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.national['SAKU INSURANCE - NATIONAL'].actual).toLocaleString(),
+                achievement: mtdData.national['SAKU INSURANCE - NATIONAL'].achievement.toFixed(1),
+                growth: mtdData.national['SAKU INSURANCE - NATIONAL'].growth.toFixed(1),
                 type: 'national'
             },
             {
                 name: 'SAKU NON INSURANCE - NATIONAL',
-                target: mtdData.national['SAKU NON INSURANCE - NATIONAL'].target.toLocaleString(),
-                actual: mtdData.national['SAKU NON INSURANCE - NATIONAL'].actual.toLocaleString(),
-                achievement: mtdData.national['SAKU NON INSURANCE - NATIONAL'].achievement,
-                growth: mtdData.national['SAKU NON INSURANCE - NATIONAL'].growth,
+                target: Math.ceil(mtdData.national['SAKU NON INSURANCE - NATIONAL'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.national['SAKU NON INSURANCE - NATIONAL'].actual).toLocaleString(),
+                achievement: mtdData.national['SAKU NON INSURANCE - NATIONAL'].achievement.toFixed(1),
+                growth: mtdData.national['SAKU NON INSURANCE - NATIONAL'].growth.toFixed(1),
                 type: 'national'
             },
             // REGIONAL items (3 items)
             {
                 name: 'EAST REGION',
-                target: mtdData.regions['EAST REGION'].target.toLocaleString(),
-                actual: mtdData.regions['EAST REGION'].actual.toLocaleString(),
-                achievement: mtdData.regions['EAST REGION'].achievement,
-                growth: mtdData.regions['EAST REGION'].growth,
+                target: Math.ceil(mtdData.regions['EAST REGION'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.regions['EAST REGION'].actual).toLocaleString(),
+                achievement: mtdData.regions['EAST REGION'].achievement.toFixed(1),
+                growth: mtdData.regions['EAST REGION'].growth.toFixed(1),
                 type: 'regional'
             },
             {
                 name: 'JAVA REGION',
-                target: mtdData.regions['JAVA REGION'].target.toLocaleString(),
-                actual: mtdData.regions['JAVA REGION'].actual.toLocaleString(),
-                achievement: mtdData.regions['JAVA REGION'].achievement,
-                growth: mtdData.regions['JAVA REGION'].growth,
+                target: Math.ceil(mtdData.regions['JAVA REGION'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.regions['JAVA REGION'].actual).toLocaleString(),
+                achievement: mtdData.regions['JAVA REGION'].achievement.toFixed(1),
+                growth: mtdData.regions['JAVA REGION'].growth.toFixed(1),
                 type: 'regional'
             },
             {
                 name: 'SUMATERA REGION',
-                target: mtdData.regions['SUMATERA REGION'].target.toLocaleString(),
-                actual: mtdData.regions['SUMATERA REGION'].actual.toLocaleString(),
-                achievement: mtdData.regions['SUMATERA REGION'].achievement,
-                growth: mtdData.regions['SUMATERA REGION'].growth,
+                target: Math.ceil(mtdData.regions['SUMATERA REGION'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.regions['SUMATERA REGION'].actual).toLocaleString(),
+                achievement: mtdData.regions['SUMATERA REGION'].achievement.toFixed(1),
+                growth: mtdData.regions['SUMATERA REGION'].growth.toFixed(1),
                 type: 'regional'
             },
             // All 10 areas
             {
                 name: 'BALI NUSRA',
-                target: mtdData.areas['BALI NUSRA'].target.toLocaleString(),
-                actual: mtdData.areas['BALI NUSRA'].actual.toLocaleString(),
-                achievement: mtdData.areas['BALI NUSRA'].achievement,
-                growth: mtdData.areas['BALI NUSRA'].growth,
+                target: Math.ceil(mtdData.areas['BALI NUSRA'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['BALI NUSRA'].actual).toLocaleString(),
+                achievement: mtdData.areas['BALI NUSRA'].achievement.toFixed(1),
+                growth: mtdData.areas['BALI NUSRA'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'JAKARTA',
-                target: mtdData.areas['JAKARTA'].target.toLocaleString(),
-                actual: mtdData.areas['JAKARTA'].actual.toLocaleString(),
-                achievement: mtdData.areas['JAKARTA'].achievement,
-                growth: mtdData.areas['JAKARTA'].growth,
+                target: Math.ceil(mtdData.areas['JAKARTA'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['JAKARTA'].actual).toLocaleString(),
+                achievement: mtdData.areas['JAKARTA'].achievement.toFixed(1),
+                growth: mtdData.areas['JAKARTA'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'JAVA 1',
-                target: mtdData.areas['JAVA 1'].target.toLocaleString(),
-                actual: mtdData.areas['JAVA 1'].actual.toLocaleString(),
-                achievement: mtdData.areas['JAVA 1'].achievement,
-                growth: mtdData.areas['JAVA 1'].growth,
+                target: Math.ceil(mtdData.areas['JAVA 1'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['JAVA 1'].actual).toLocaleString(),
+                achievement: mtdData.areas['JAVA 1'].achievement.toFixed(1),
+                growth: mtdData.areas['JAVA 1'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'JAVA 2',
-                target: mtdData.areas['JAVA 2'].target.toLocaleString(),
-                actual: mtdData.areas['JAVA 2'].actual.toLocaleString(),
-                achievement: mtdData.areas['JAVA 2'].achievement,
-                growth: mtdData.areas['JAVA 2'].growth,
+                target: Math.ceil(mtdData.areas['JAVA 2'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['JAVA 2'].actual).toLocaleString(),
+                achievement: mtdData.areas['JAVA 2'].achievement.toFixed(1),
+                growth: mtdData.areas['JAVA 2'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'JAVA 3',
-                target: mtdData.areas['JAVA 3'].target.toLocaleString(),
-                actual: mtdData.areas['JAVA 3'].actual.toLocaleString(),
-                achievement: mtdData.areas['JAVA 3'].achievement,
-                growth: mtdData.areas['JAVA 3'].growth,
+                target: Math.ceil(mtdData.areas['JAVA 3'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['JAVA 3'].actual).toLocaleString(),
+                achievement: mtdData.areas['JAVA 3'].achievement.toFixed(1),
+                growth: mtdData.areas['JAVA 3'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'KALIMANTAN',
-                target: mtdData.areas['KALIMANTAN'].target.toLocaleString(),
-                actual: mtdData.areas['KALIMANTAN'].actual.toLocaleString(),
-                achievement: mtdData.areas['KALIMANTAN'].achievement,
-                growth: mtdData.areas['KALIMANTAN'].growth,
+                target: Math.ceil(mtdData.areas['KALIMANTAN'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['KALIMANTAN'].actual).toLocaleString(),
+                achievement: mtdData.areas['KALIMANTAN'].achievement.toFixed(1),
+                growth: mtdData.areas['KALIMANTAN'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'SULAWESI',
-                target: mtdData.areas['SULAWESI'].target.toLocaleString(),
-                actual: mtdData.areas['SULAWESI'].actual.toLocaleString(),
-                achievement: mtdData.areas['SULAWESI'].achievement,
-                growth: mtdData.areas['SULAWESI'].growth,
+                target: Math.ceil(mtdData.areas['SULAWESI'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['SULAWESI'].actual).toLocaleString(),
+                achievement: mtdData.areas['SULAWESI'].achievement.toFixed(1),
+                growth: mtdData.areas['SULAWESI'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'SUMATERA 1',
-                target: mtdData.areas['SUMATERA 1'].target.toLocaleString(),
-                actual: mtdData.areas['SUMATERA 1'].actual.toLocaleString(),
-                achievement: mtdData.areas['SUMATERA 1'].achievement,
-                growth: mtdData.areas['SUMATERA 1'].growth,
+                target: Math.ceil(mtdData.areas['SUMATERA 1'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['SUMATERA 1'].actual).toLocaleString(),
+                achievement: mtdData.areas['SUMATERA 1'].achievement.toFixed(1),
+                growth: mtdData.areas['SUMATERA 1'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'SUMATERA 2',
-                target: mtdData.areas['SUMATERA 2'].target.toLocaleString(),
-                actual: mtdData.areas['SUMATERA 2'].actual.toLocaleString(),
-                achievement: mtdData.areas['SUMATERA 2'].achievement,
-                growth: mtdData.areas['SUMATERA 2'].growth,
+                target: Math.ceil(mtdData.areas['SUMATERA 2'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['SUMATERA 2'].actual).toLocaleString(),
+                achievement: mtdData.areas['SUMATERA 2'].achievement.toFixed(1),
+                growth: mtdData.areas['SUMATERA 2'].growth.toFixed(1),
                 type: 'area'
             },
             {
                 name: 'SUMATERA 3',
-                target: mtdData.areas['SUMATERA 3'].target.toLocaleString(),
-                actual: mtdData.areas['SUMATERA 3'].actual.toLocaleString(),
-                achievement: mtdData.areas['SUMATERA 3'].achievement,
-                growth: mtdData.areas['SUMATERA 3'].growth,
+                target: Math.ceil(mtdData.areas['SUMATERA 3'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.areas['SUMATERA 3'].actual).toLocaleString(),
+                achievement: mtdData.areas['SUMATERA 3'].achievement.toFixed(1),
+                growth: mtdData.areas['SUMATERA 3'].growth.toFixed(1),
                 type: 'area'
             },
             // Android area metrics (10 items)
             {
                 name: 'ANDROID - BALI NUSRA',
-                target: mtdData.android_areas['BALI NUSRA ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['BALI NUSRA ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['BALI NUSRA ANDROID'].achievement,
-                growth: mtdData.android_areas['BALI NUSRA ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['BALI NUSRA ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['BALI NUSRA ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['BALI NUSRA ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['BALI NUSRA ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - JAKARTA',
-                target: mtdData.android_areas['JAKARTA ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['JAKARTA ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['JAKARTA ANDROID'].achievement,
-                growth: mtdData.android_areas['JAKARTA ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['JAKARTA ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['JAKARTA ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['JAKARTA ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['JAKARTA ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - JAVA 1',
-                target: mtdData.android_areas['JAVA 1 ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['JAVA 1 ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['JAVA 1 ANDROID'].achievement,
-                growth: mtdData.android_areas['JAVA 1 ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['JAVA 1 ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['JAVA 1 ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['JAVA 1 ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['JAVA 1 ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - JAVA 2',
-                target: mtdData.android_areas['JAVA 2 ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['JAVA 2 ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['JAVA 2 ANDROID'].achievement,
-                growth: mtdData.android_areas['JAVA 2 ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['JAVA 2 ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['JAVA 2 ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['JAVA 2 ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['JAVA 2 ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - JAVA 3',
-                target: mtdData.android_areas['JAVA 3 ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['JAVA 3 ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['JAVA 3 ANDROID'].achievement,
-                growth: mtdData.android_areas['JAVA 3 ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['JAVA 3 ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['JAVA 3 ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['JAVA 3 ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['JAVA 3 ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - KALIMANTAN',
-                target: mtdData.android_areas['KALIMANTAN ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['KALIMANTAN ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['KALIMANTAN ANDROID'].achievement,
-                growth: mtdData.android_areas['KALIMANTAN ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['KALIMANTAN ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['KALIMANTAN ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['KALIMANTAN ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['KALIMANTAN ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - SULAWESI',
-                target: mtdData.android_areas['SULAWESI ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['SULAWESI ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['SULAWESI ANDROID'].achievement,
-                growth: mtdData.android_areas['SULAWESI ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['SULAWESI ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['SULAWESI ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['SULAWESI ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['SULAWESI ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - SUMATERA 1',
-                target: mtdData.android_areas['SUMATERA 1 ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['SUMATERA 1 ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['SUMATERA 1 ANDROID'].achievement,
-                growth: mtdData.android_areas['SUMATERA 1 ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['SUMATERA 1 ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['SUMATERA 1 ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['SUMATERA 1 ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['SUMATERA 1 ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - SUMATERA 2',
-                target: mtdData.android_areas['SUMATERA 2 ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['SUMATERA 2 ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['SUMATERA 2 ANDROID'].achievement,
-                growth: mtdData.android_areas['SUMATERA 2 ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['SUMATERA 2 ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['SUMATERA 2 ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['SUMATERA 2 ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['SUMATERA 2 ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             },
             {
                 name: 'ANDROID - SUMATERA 3',
-                target: mtdData.android_areas['SUMATERA 3 ANDROID'].target.toLocaleString(),
-                actual: mtdData.android_areas['SUMATERA 3 ANDROID'].actual.toLocaleString(),
-                achievement: mtdData.android_areas['SUMATERA 3 ANDROID'].achievement,
-                growth: mtdData.android_areas['SUMATERA 3 ANDROID'].growth,
+                target: Math.ceil(mtdData.android_areas['SUMATERA 3 ANDROID'].target).toLocaleString(),
+                actual: Math.ceil(mtdData.android_areas['SUMATERA 3 ANDROID'].actual).toLocaleString(),
+                achievement: mtdData.android_areas['SUMATERA 3 ANDROID'].achievement.toFixed(1),
+                growth: mtdData.android_areas['SUMATERA 3 ANDROID'].growth.toFixed(1),
                 type: 'android_area'
             }
         ];
@@ -1219,28 +2520,29 @@ async function createProfessionalMTDTable() {
                 isRegional ? 'metric-name regional-metric' : 
                 isAndroidArea ? 'metric-name android-area-metric' : 'metric-name area-metric';
 
-            // Target
+            // Target - Already rounded and formatted
             const targetCell = row.insertCell(1);
             targetCell.textContent = metric.target;
 
-            // Actual
+            // Actual - Already rounded and formatted
             const actualCell = row.insertCell(2);
             actualCell.textContent = metric.actual;
 
-            // Achievement vs Target
+            // Achievement vs Target - With % symbol
             const achievementCell = row.insertCell(3);
-            achievementCell.innerHTML = `${metric.achievement.toFixed(2)}%`;
-            achievementCell.className = `achievement-cell ${getAchievementCSSClass(metric.achievement)}`;
+            achievementCell.innerHTML = `${metric.achievement}%`;  // ✅ 1 decimal place
+            achievementCell.className = `achievement-cell ${getAchievementCSSClass(parseFloat(metric.achievement))}`;
 
-            // Growth vs Last Month
+            // Growth vs Last Month - With % symbol and arrow
             const growthCell = row.insertCell(4);
-            const growthStatus = getGrowthStatus(metric.growth);
-            const growthSign = metric.growth >= 0 ? '+' : '';
-            growthCell.innerHTML = `${growthStatus.arrow} ${growthSign}${metric.growth.toFixed(2)}%`;
-            growthCell.className = `growth-cell ${getGrowthCSSClass(metric.growth)}`;
+            const growthValue = parseFloat(metric.growth);
+            const growthStatus = getGrowthStatus(growthValue);
+            const growthSign = growthValue >= 0 ? '+' : '';
+            growthCell.innerHTML = `${growthStatus.arrow} ${growthSign}${metric.growth}%`;  // ✅ 1 decimal place
+            growthCell.className = `growth-cell ${getGrowthCSSClass(growthValue)}`;
         });
 
-        console.log('✅ Professional MTD Performance Table created successfully with dynamic data');
+        console.log('✅ Professional MTD Performance Table created successfully with standardized formatting');
         
     } catch (error) {
         console.error('❌ Error creating Professional MTD Performance Table:', error);
@@ -2417,6 +3719,175 @@ function enhanceNavigationElements() {
     }
 }
 
+
+// // ==================== TEST FUNCTION: NATIONAL CHART WITH DYNAMIC DATA ====================
+
+// function testNationalChart() {
+//     console.log('🧪 Creating test national chart with dynamic weekly data...');
+    
+//     if (!weeklyData || !weeklyData.national || !weeklyData.national['ALL PRODUCT']) {
+//         console.error('❌ Weekly data not loaded');
+//         return;
+//     }
+    
+//     const nationalData = weeklyData.national['ALL PRODUCT'];
+    
+//     console.log('📊 National Weekly Data:', {
+//         weeks: nationalData.weeks.length,
+//         sample_weeks: nationalData.weeks.slice(0, 5),
+//         sample_actuals: nationalData.actuals.slice(0, 5),
+//         sample_targets: nationalData.targets.slice(0, 5)
+//     });
+    
+//     // Find the canvas for national chart
+//     const canvas = document.getElementById('ordersChart');
+//     if (!canvas) {
+//         console.warn('Canvas element ordersChart not found');
+//         return;
+//     }
+    
+//     // Clear any existing chart
+//     if (canvas.chartInstance) {
+//         canvas.chartInstance.destroy();
+//     }
+    
+//     try {
+//         const chart = new Chart(canvas.getContext('2d'), {
+//             type: 'line',
+//             data: {
+//                 labels: nationalData.weeks,
+//                 datasets: [
+//                     {
+//                         label: 'Actual Orders',
+//                         data: nationalData.actuals,
+//                         borderColor: '#3b82f6',
+//                         backgroundColor: '#3b82f6',
+//                         pointBackgroundColor: '#3b82f6',
+//                         pointBorderColor: '#3b82f6',
+//                         pointBorderWidth: 2,
+//                         pointRadius: 5,
+//                         pointHoverRadius: 7,
+//                         fill: false,
+//                         tension: 0.1,
+//                         borderWidth: 3,
+//                         order: 1
+//                     },
+//                     {
+//                         label: 'Target',
+//                         data: nationalData.targets,
+//                         borderColor: '#f59e0b',
+//                         backgroundColor: '#f59e0b',
+//                         borderDash: [8, 4],
+//                         borderWidth: 3,
+//                         pointBackgroundColor: '#f59e0b',
+//                         pointBorderColor: '#f59e0b',
+//                         pointBorderWidth: 1,
+//                         pointRadius: 4,
+//                         pointHoverRadius: 6,
+//                         fill: false,
+//                         tension: 0.1,
+//                         order: 2
+//                     }
+//                 ]
+//             },
+//             options: {
+//                 responsive: true,
+//                 maintainAspectRatio: false,
+//                 interaction: {
+//                     intersect: false,
+//                     mode: 'index'
+//                 },
+//                 plugins: {
+//                     title: {
+//                         display: true,
+//                         text: '🧪 TEST: National Weekly Orders (Dynamic Data)',
+//                         font: {
+//                             size: 16,
+//                             weight: 'bold',
+//                             family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+//                         },
+//                         color: '#1e293b'
+//                     },
+//                     legend: {
+//                         display: true,
+//                         position: 'bottom',
+//                         labels: {
+//                             usePointStyle: true,
+//                             font: { 
+//                                 size: 12,
+//                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+//                             },
+//                             color: '#374151'
+//                         }
+//                     },
+//                     tooltip: {
+//                         backgroundColor: 'rgba(255, 255, 255, 0.95)',
+//                         titleColor: '#1e293b',
+//                         bodyColor: '#374151',
+//                         borderColor: '#e2e8f0',
+//                         borderWidth: 1
+//                     }
+//                 },
+//                 scales: {
+//                     y: {
+//                         title: {
+//                             display: true,
+//                             text: 'Orders',
+//                             font: { 
+//                                 size: 14,
+//                                 weight: '600',
+//                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+//                             },
+//                             color: '#374151'
+//                         },
+//                         beginAtZero: true,
+//                         ticks: {
+//                             font: { 
+//                                 size: 11,
+//                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+//                             },
+//                             color: '#64748b'
+//                         },
+//                         grid: {
+//                             color: 'rgba(148, 163, 184, 0.1)'
+//                         }
+//                     },
+//                     x: {
+//                         title: {
+//                             display: true,
+//                             text: 'Week',
+//                             font: { 
+//                                 size: 14,
+//                                 weight: '600',
+//                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+//                             },
+//                             color: '#374151'
+//                         },
+//                         ticks: {
+//                             maxRotation: 45,
+//                             font: { 
+//                                 size: 10,
+//                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+//                             },
+//                             color: '#64748b'
+//                         },
+//                         grid: {
+//                             color: 'rgba(148, 163, 184, 0.1)'
+//                         }
+//                     }
+//                 }
+//             }
+//         });
+        
+//         canvas.chartInstance = chart;
+//         console.log('✅ Test national chart created successfully!');
+        
+//     } catch (error) {
+//         console.error('❌ Error creating test chart:', error);
+//     }
+// }
+
+
 // MAIN DOCUMENT READY EVENT HANDLER with Professional Integration
 // At the bottom of script.js, update this:
 document.addEventListener('DOMContentLoaded', async function() {
@@ -2447,29 +3918,75 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Initialize professional navigation FIRST
         initializeProfessionalNavigation();
 
-        // CRITICAL: Load MTD data BEFORE creating any charts
+     // ✅ LOAD MTD DATA
         console.log('⏳ Loading MTD data from JSON files...');
-        mtdData = await buildMTDDataFromRaw();
+        try {
+            window.mtdData = await buildMTDDataFromRaw();
+            
+            if (!window.mtdData || !window.mtdData.national) {
+                console.warn('⚠️ MTD data incomplete, but continuing...');
+                window.mtdData = window.mtdData || { national: {}, regions: {}, areas: {}, android_areas: {} };
+            }
+            
+            console.log('✅ MTD data loaded successfully');
+        } catch (mtdError) {
+            console.error('⚠️ MTD data loading failed:', mtdError);
+            // Create empty MTD data structure so the app can continue
+            window.mtdData = { national: {}, regions: {}, areas: {}, android_areas: {} };
+            console.log('⚠️ Using empty MTD data structure');
+        }
+
+
+        // ✅ LOAD WEEKLY DATA (NEW!)
+        console.log('⏳ Loading Weekly data from JSON files...');
+        window.weeklyData = await buildWeeklyDataFromRaw();
         
-        if (!mtdData) {
-            throw new Error('Failed to load MTD data');
+        if (!window.weeklyData) {  // ✅ CORRECT - checks the actual variable
+        throw new Error('Failed to load Weekly data');
         }
         
-        console.log('✅ MTD data loaded successfully');
+        console.log('✅ Weekly data loaded successfully');
 
-        // Now create all charts and tables
+        // Create MTD table
         await createProfessionalMTDTable();
-        createProfessionalXmRCharts();
-        createAllRegionalCharts();
-        createAllIndividualVariableCharts();
-        createAllAndroidAreaCharts();
+        
+        // ⏸️ TEMPORARILY COMMENT OUT chart creation until we update them
+        // createProfessionalXmRCharts();
+        // createAllRegionalCharts();
+        // createAllIndividualVariableCharts();
+        // createAllAndroidAreaCharts();
+
+   // 🎯 CREATE REAL NATIONAL CHART with dynamic data
+        console.log('📊 Creating REAL national chart with dynamic weekly data...');
+        await createRealNationalWeeklyChart(); 
+        
+        // 🎯 CREATE REGIONAL BREAKDOWN CHARTS (Individual Area Trends)
+        console.log('📊 Creating Regional Breakdown Charts...');
+        await createRegionalBreakdownCharts();
+
+        // 🎯 CREATE REGIONAL XMR CHARTS with dynamic data
+        console.log('📊 Creating Regional XmR Charts...');
+        await createRegionalXmRCharts();
+
+
+        // 🎯 CREATE PRODUCT CHARTS with dynamic data
+        console.log('📊 Creating Product XmR Charts...');
+        await createProductXmRCharts();
+
+        // 🎯 CREATE AREA CHARTS with dynamic data
+        console.log('📊 Creating Area XmR Charts...');
+        await createAreaXmRCharts();
+
+        // 🎯 CREATE ANDROID AREA CHARTS with dynamic data
+        console.log('📊 Creating Android Area XmR Charts...');
+        await createAndroidAreaXmRCharts();
 
         // Enhance navigation elements
         setTimeout(() => {
             enhanceNavigationElements();
         }, 1000);
 
-        console.log('🎉 All professional charts and analyses created successfully');
+        console.log('🎉 Initialization complete');
     } catch (error) {
         console.error('❌ Error during initialization:', error);
         
@@ -2484,7 +4001,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     </p>
                     <ul style="color: #374151; line-height: 1.8;">
                         <li>JSON files are in the repository root directory</li>
-                        <li>File names match exactly: "Extract - Daily Order.json" and "Monthly - Raw Target.json"</li>
+                        <li>File names match exactly: "Extract - Daily Order.json", "Monthly - Raw Target.json", "Weekly - Raw Target.json"</li>
                         <li>Files contain valid JSON data</li>
                         <li>Check browser console (F12) for detailed error messages</li>
                     </ul>
@@ -2505,25 +4022,19 @@ window.addEventListener('error', function(e) {
 
 // Export professional analysis object with dynamic data loading
 window.ProfessionalMSChannelAnalysis = {
-    version: 'v16.0 - Dynamic Data Loading from Raw JSON Files',
-    data: realMSData,
-    ordersData: ordersData,
-    individualVariableData: individualVariableData,
-    regionalData: regionalData,
-    targetData: targetData,
-    regionalTargetData: regionalTargetData,
-    mtdData: mtdData,
+    version: 'v16.1 - Fixed Dynamic Data Loading',
+    // Data accessors
+    get mtdData() { return window.mtdData; },
+    get weeklyData() { return window.weeklyData; },
     // Dynamic data loading functions
     buildMTDDataFromRaw: buildMTDDataFromRaw,
+    buildWeeklyDataFromRaw: buildWeeklyDataFromRaw,
     loadDailyOrders: loadDailyOrders,
-    loadMonthlyTargets: loadMonthlyTargets,
-    getCurrentMonthDay: getCurrentMonthDay,
+    loadWeeklyTargets: loadWeeklyTargets,
     // Calculation functions
     calculateXmRMetrics: calculateXmRMetrics,
     detectAnomalies: detectAnomalies,
     // Chart creation functions
-    createAllRegionalCharts: createAllRegionalCharts,
-    createRegionalLineChart: createRegionalLineChart,
-    createProfessionalMTDTable: createProfessionalMTDTable,  // Fixed typo: removed extra 'D'
-    initializeProfessionalNavigation: initializeProfessionalNavigation
-};  // Properly closed
+    createRealNationalWeeklyChart: createRealNationalWeeklyChart,
+    createProfessionalMTDTable: createProfessionalMTDTable
+};
