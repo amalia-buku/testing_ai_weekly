@@ -461,13 +461,13 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                         label: 'Actual',
                         data: last6Months.map(m => m.actual),
                         backgroundColor: '#3b82f6',
-                        barThickness: 25
+                        barThickness: 30
                     },
                     {
                         label: 'Target',
                         data: last6Months.map(m => m.target),
                         backgroundColor: '#f59e0b',
-                        barThickness: 25
+                        barThickness: 30
                     }
                 ]
             },
@@ -506,13 +506,23 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                     },
                     datalabels: {
                         display: function(context) {
-                            return context.datasetIndex === 0; // Only show on Actual bars
+                            const idx = context.dataIndex;
+                            const totalMonths = context.chart.data.labels.length;
+                            
+                            // ✅ SHOW LABELS: Current month + last 4 months only (total 5)
+                            return idx >= totalMonths - 5 && context.datasetIndex === 0; // Only on Actual bars
                         },
                         anchor: 'end',
                         align: 'top',
                         offset: 2,
-                        font: { size: 9, weight: 'bold' },
-                        color: '#1e293b',
+                        font: { size: 10, weight: 'bold' },
+                        color: function(context) {
+                            const idx = context.dataIndex;
+                            const totalMonths = context.chart.data.labels.length;
+                            
+                            if (idx === totalMonths - 1) return '#1e293b';  // Current month - darker
+                            return '#64748b';  // Last 4 months - gray
+                        },
                         formatter: function(value, context) {
                             const month = last6Months[context.dataIndex];
                             const achievement = ((month.actual / month.target) * 100).toFixed(0);
@@ -528,7 +538,7 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                             display: false  // ✅ Remove Y-axis border
                         },
                         grid: {
-                            display: false,  // ✅ Remove all grid lines
+                            display: false,  // ✅ REMOVE ALL GRID LINES
                             drawBorder: false
                         },
                         ticks: {
@@ -540,7 +550,7 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                             display: false  // ✅ Remove X-axis border
                         },
                         grid: {
-                            display: false,  // ✅ Remove all grid lines
+                            display: false,  // ✅ REMOVE ALL GRID LINES
                             drawBorder: false
                         },
                         ticks: {
@@ -554,7 +564,7 @@ function createMonthlyChart(weeks, actualOrders, targets) {
         });
         
         canvas.chartInstance = chart;
-        console.log('✅ Monthly chart created - Clean version with no grid lines');
+        console.log('✅ Monthly chart created - Clean version with no grid lines and compact labels');
         
     } catch (error) {
         console.error('❌ Error creating monthly chart:', error);
