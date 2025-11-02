@@ -227,7 +227,7 @@ function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null
 
 async function createRealNationalWeeklyChart() {
     try {
-        console.log('📊 CREATING REAL NATIONAL WEEKLY CHART WITH DYNAMIC DATA...');
+        console.log('📊 CREATING SIMPLIFIED ACTUAL VS TARGET CHART...');
         
         // Load weekly data if not already loaded
         if (!window.weeklyData) {
@@ -242,11 +242,11 @@ async function createRealNationalWeeklyChart() {
         const nationalData = window.weeklyData.national['ALL PRODUCT']; 
         console.log(`✅ Using ${nationalData.weeks.length} weeks of national data`);
         
-        // Calculate XmR control metrics
+        // Calculate XmR control metrics (still needed for page metrics if used elsewhere)
         const metrics = calculateXmRMetrics(nationalData.actualOrders);
-        console.log('📈 XmR Control Metrics:', metrics);
+        console.log('📈 Metrics calculated for reference');
         
-        // Detect anomalies
+        // Detect anomalies (for page metrics if needed)
         const anomalies = detectAnomalies(nationalData.actualOrders, metrics);
         console.log(`🔍 Detected ${anomalies.length} anomalies`);
         
@@ -262,112 +262,126 @@ async function createRealNationalWeeklyChart() {
             canvas.chartInstance.destroy();
         }
         
-        // Create the chart
+        // ✅ SIMPLIFIED CHART - Only Actual vs Target
         const chart = new Chart(canvas, {
             type: 'line',
             data: {
                 labels: nationalData.weeks,
                 datasets: [
                     {
-                        label: 'Total Orders',
+                        label: 'Actual Orders',
                         data: nationalData.actualOrders,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         pointBackgroundColor: '#3b82f6',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
                         tension: 0.3,
-                        borderWidth: 3
+                        borderWidth: 3,
+                        fill: true
                     },
                     {
                         label: 'Target',
                         data: nationalData.targets,
                         borderColor: '#f97316',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'rgba(249, 115, 22, 0.05)',
                         pointBackgroundColor: '#f97316',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
                         pointRadius: 5,
                         pointHoverRadius: 7,
                         tension: 0.1,
-                        borderWidth: 2,
-                        borderDash: [5, 5]
-                    },
-                    {
-                        label: 'Upper Limit',
-                        data: Array(nationalData.weeks.length).fill(metrics.upperNaturalProcessLimit),  // ✅ Changed
-                        borderColor: '#dc2626',
-                        backgroundColor: 'transparent',
                         borderWidth: 3,
-                        borderDash: [8, 4],
-                        pointRadius: 0,
-                        tension: 0
-                    },
-                    {
-                        label: 'Center Line',
-                        data: Array(nationalData.weeks.length).fill(metrics.centerLineX),  // ✅ Changed
-                        borderColor: '#059669',
-                        backgroundColor: 'transparent',
-                        borderWidth: 3,
-                        borderDash: [8, 4],
-                        pointRadius: 0,
-                        tension: 0
-                    },
-                    {
-                        label: 'Lower Limit',
-                        data: Array(nationalData.weeks.length).fill(metrics.lowerNaturalProcessLimit),  // ✅ Changed
-                        borderColor: '#dc2626',
-                        backgroundColor: 'transparent',
-                        borderWidth: 3,
-                        borderDash: [8, 5],
-                        pointRadius: 0,
-                        tension: 0
+                        borderDash: [5, 5],
+                        fill: false
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     title: {
-                        display: false,
-                        text: 'X Chart - Total Orders Values',
+                        display: true,
+                        text: 'Total Orders - Actual vs Target',
                         font: {
-                            size: 16,
-                            weight: '600',
+                            size: 20,
+                            weight: '700',
                             family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                         },
                         color: '#1e293b',
-                        padding: 20
+                        padding: { top: 10, bottom: 20 }
+                    },
+                    subtitle: {
+                        display: true,
+                        text: 'Weekly Performance Tracking',
+                        font: {
+                            size: 14,
+                            weight: '400',
+                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        },
+                        color: '#64748b',
+                        padding: { bottom: 15 }
                     },
                     legend: {
                         display: true,
                         position: 'bottom',
                         labels: {
                             usePointStyle: true,
+                            padding: 15,
                             font: {
-                                size: 12,
+                                size: 13,
                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                             },
-                            color: '#374151'
+                            color: '#374151',
+                            boxWidth: 8,
+                            boxHeight: 8
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
                         titleColor: '#1e293b',
                         bodyColor: '#374151',
                         borderColor: '#e2e8f0',
-                        borderWidth: 1,
+                        borderWidth: 2,
+                        padding: 15,
+                        titleFont: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) {
                                     label += ': ';
                                 }
-                                label += context.parsed.y.toLocaleString();
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toLocaleString();
+                                }
                                 return label;
+                            },
+                            afterBody: function(tooltipItems) {
+                                const idx = tooltipItems[0].dataIndex;
+                                const actual = nationalData.actualOrders[idx];
+                                const target = nationalData.targets[idx];
+                                const achievement = ((actual / target) * 100).toFixed(1);
+                                const gap = actual - target;
+                                const gapSign = gap >= 0 ? '+' : '';
+                                
+                                return [
+                                    '',
+                                    `Achievement: ${achievement}%`,
+                                    `Gap: ${gapSign}${gap.toLocaleString()} orders`
+                                ];
                             }
                         }
                     }
@@ -384,16 +398,20 @@ async function createRealNationalWeeklyChart() {
                             },
                             color: '#374151'
                         },
-                        beginAtZero: true,
+                        beginAtZero: false,
                         ticks: {
                             font: {
                                 size: 11,
                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                             },
-                            color: '#64748b'
+                            color: '#64748b',
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.1)'
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
                         }
                     },
                     x: {
@@ -417,7 +435,8 @@ async function createRealNationalWeeklyChart() {
                             color: '#64748b'
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.1)'
+                            color: 'rgba(148, 163, 184, 0.08)',
+                            drawBorder: false
                         }
                     }
                 }
@@ -425,163 +444,14 @@ async function createRealNationalWeeklyChart() {
         });
         
         canvas.chartInstance = chart;
-        console.log('✅ Real national weekly chart created successfully!');
+        console.log('✅ Simplified actual vs target chart created successfully!');
         
         // Update page metrics if elements exist
         updatePageMetrics(nationalData, metrics, anomalies);
-
-
-          
-        // ✅✅✅ ADD mR CHART CODE HERE - START ✅✅✅
-        // Create mR Chart
-        console.log('📊 Creating mR Chart...');
-        const mRCanvas = document.getElementById('ordersMRChart');
-        if (mRCanvas && metrics.movingRanges) {
-            // Destroy existing chart if any
-            if (mRCanvas.chartInstance) {
-                mRCanvas.chartInstance.destroy();
-            }
-            
-            const mRChart = new Chart(mRCanvas, {
-                type: 'line',
-                data: {
-                    labels: nationalData.weeks.slice(1), // One less than X chart
-                    datasets: [
-                        {
-                            label: 'Moving Range',
-                            data: metrics.movingRanges,
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            pointBackgroundColor: '#8b5cf6',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            tension: 0.1,
-                            borderWidth: 3
-                        },
-                        {
-                            label: 'Center Line (mR-bar)',
-                            data: Array(metrics.movingRanges.length).fill(metrics.centerLineMR),
-                            borderColor: '#10b981',
-                            backgroundColor: 'transparent',
-                            borderWidth: 3,
-                            borderDash: [8, 4],
-                            pointRadius: 0,
-                            tension: 0
-                        },
-                        {
-                            label: 'Upper Range Limit',
-                            data: Array(metrics.movingRanges.length).fill(metrics.upperRangeLimit),
-                            borderColor: '#ef4444',
-                            backgroundColor: 'transparent',
-                            borderWidth: 3,
-                            borderDash: [8, 4],
-                            pointRadius: 0,
-                            tension: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        title: {
-                            display: false
-                        },
-                        legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                                usePointStyle: true,
-                                font: {
-                                    size: 12,
-                                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                                },
-                                color: '#374151'
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            titleColor: '#1e293b',
-                            bodyColor: '#374151',
-                            borderColor: '#e2e8f0',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    label += context.parsed.y.toLocaleString();
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Moving Range',
-                                font: {
-                                    size: 14,
-                                    weight: '600',
-                                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                                },
-                                color: '#374151'
-                            },
-                            beginAtZero: true,
-                            ticks: {
-                                font: {
-                                    size: 11,
-                                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                                },
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.1)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Week',
-                                font: {
-                                    size: 14,
-                                    weight: '600',
-                                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                                },
-                                color: '#374151'
-                            },
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45,
-                                font: {
-                                    size: 10,
-                                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                                },
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.1)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            mRCanvas.chartInstance = mRChart;
-            console.log('✅ mR Chart created successfully!');
-        } else {
-            console.warn('⚠️ mR Chart canvas not found or moving ranges not available');
-        }
-        // ✅✅✅ ADD mR CHART CODE HERE - END ✅✅✅
         
     } catch (error) {
-        console.error('❌ Error creating real national weekly chart:', error);
+        console.error('❌ Error creating simplified chart:', error);
     }
-
 }
 
 
