@@ -1023,3 +1023,9 @@ canvas[id$="MRChart"] {
     max-width: 100%;
     height: auto !important;
 }
+/* Make side-by-side responsive */
+@media (max-width: 1024px) {
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
