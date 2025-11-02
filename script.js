@@ -321,277 +321,192 @@ function createUniversalCleanChart(canvasId, labels, actualData, targetData = nu
         });
     }
     
-    // Create chart
-    const chart = new Chart(canvas, {
-        type: config.chartType,
-        data: {
-            labels: labels,
-            datasets: datasets
+  // Create chart
+const chart = new Chart(canvas, {
+    type: config.chartType,
+    data: {
+        labels: labels,
+        datasets: datasets
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 12,
-                        font: { size: 11 },
-                        color: '#374151'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    titleColor: '#1e293b',
-                    bodyColor: '#374151',
-                    borderColor: '#e2e8f0',
-                    borderWidth: 1,
-                    padding: 12
-                },
-        datalabels: {
-    display: function(context) {
-        if (!config.showLabels || context.datasetIndex !== 0) return false;
-        
-        const idx = context.dataIndex;
-        const total = context.dataset.data.length;
-        const data = context.dataset.data;
-        
-        // Filter out zeros for min/max calculation
-        const nonZeroData = data.map((val, i) => ({ val, idx: i }))
-            .filter(item => item.val > 0);
-        
-        if (nonZeroData.length === 0) return false;
-        
-        // Find highest and lowest (excluding zeros)
-        const maxItem = nonZeroData.reduce((max, item) => 
-            item.val > max.val ? item : max
-        );
-        const minItem = nonZeroData.reduce((min, item) => 
-            item.val < min.val ? item : min
-        );
-        
-        const maxIndex = maxItem.idx;
-        const minIndex = minItem.idx;
-        const currentIndex = total - 1;
-        const previousIndex = total - 2;
-        
-        // ✅ SHOW LABELS: Current, Previous, Highest, Lowest (4 labels max)
-        return idx === currentIndex || 
-               idx === previousIndex || 
-               idx === maxIndex || 
-               idx === minIndex;
-    },
-    align: function(context) {
-        const idx = context.dataIndex;
-        const data = context.dataset.data;
-        
-        // Filter out zeros for min calculation
-        const nonZeroData = data.map((val, i) => ({ val, idx: i }))
-            .filter(item => item.val > 0);
-        
-        if (nonZeroData.length === 0) return 'top';
-        
-        const minItem = nonZeroData.reduce((min, item) => 
-            item.val < min.val ? item : min
-        );
-        const minIndex = minItem.idx;
-        
-        // ✅ Lowest point label goes below
-        if (idx === minIndex) return 'bottom';
-        
-        return 'top';
-    },
-    offset: 8,
-    font: function(context) {
-        const idx = context.dataIndex;
-        const total = context.dataset.data.length;
-        const data = context.dataset.data;
-        
-        // Filter out zeros
-        const nonZeroData = data.map((val, i) => ({ val, idx: i }))
-            .filter(item => item.val > 0);
-        
-        if (nonZeroData.length === 0) {
-            return { size: 10, weight: '600' };
-        }
-        
-        const maxItem = nonZeroData.reduce((max, item) => 
-            item.val > max.val ? item : max
-        );
-        const minItem = nonZeroData.reduce((min, item) => 
-            item.val < min.val ? item : min
-        );
-        
-        const maxIndex = maxItem.idx;
-        const minIndex = minItem.idx;
-        const currentIndex = total - 1;
-        
-        // ✅ Bold for current, highest, lowest
-        if (idx === currentIndex || idx === maxIndex || idx === minIndex) {
-            return { size: 11, weight: 'bold' };
-        }
-        
-        // Normal for previous
-        return { size: 10, weight: '600' };
-    },
-    color: function(context) {
-        const idx = context.dataIndex;
-        const total = context.dataset.data.length;
-        const data = context.dataset.data;
-        
-        // Filter out zeros
-        const nonZeroData = data.map((val, i) => ({ val, idx: i }))
-            .filter(item => item.val > 0);
-        
-        if (nonZeroData.length === 0) {
-            return '#64748b';
-        }
-        
-        const maxItem = nonZeroData.reduce((max, item) => 
-            item.val > max.val ? item : max
-        );
-        const minItem = nonZeroData.reduce((min, item) => 
-            item.val < min.val ? item : min
-        );
-        
-        const maxIndex = maxItem.idx;
-        const minIndex = minItem.idx;
-        const currentIndex = total - 1;
-        
-        // ✅ Color coding
-        if (idx === currentIndex) return '#3b82f6';  // Current - blue
-        if (idx === maxIndex) return '#10b981';      // Highest - green
-        if (idx === minIndex) return '#ef4444';      // Lowest - red
-        return '#64748b';                            // Previous - gray
-    },
-    formatter: function(value, context) {
-        const idx = context.dataIndex;
-        const total = context.dataset.data.length;
-        const data = context.dataset.data;
-        
-        // Filter out zeros
-        const nonZeroData = data.map((val, i) => ({ val, idx: i }))
-            .filter(item => item.val > 0);
-        
-        if (nonZeroData.length === 0) {
-            return Math.round(value).toLocaleString();
-        }
-        
-        const maxItem = nonZeroData.reduce((max, item) => 
-            item.val > max.val ? item : max
-        );
-        const minItem = nonZeroData.reduce((min, item) => 
-            item.val < min.val ? item : min
-        );
-        
-        const maxIndex = maxItem.idx;
-        const minIndex = minItem.idx;
-        const currentIndex = total - 1;
-        
-        // ✅ ROUND TO INTEGER
-        const roundedValue = Math.round(value);
-        
-        // ✅ Label text
-        if (idx === currentIndex) {
-            return `CURRENT: ${roundedValue.toLocaleString()}`;
-        }
-        if (idx === maxIndex) {
-            return `HIGHEST: ${roundedValue.toLocaleString()}`;
-        }
-        if (idx === minIndex) {
-            return `LOWEST: ${roundedValue.toLocaleString()}`;
-        }
-        
-        // Previous week - just number
-        return roundedValue.toLocaleString();
-    },
-    // ✅ Add background for better readability
-    backgroundColor: function(context) {
-        const idx = context.dataIndex;
-        const total = context.dataset.data.length;
-        const data = context.dataset.data;
-        
-        const nonZeroData = data.map((val, i) => ({ val, idx: i }))
-            .filter(item => item.val > 0);
-        
-        if (nonZeroData.length === 0) {
-            return 'rgba(255, 255, 255, 0.9)';
-        }
-        
-        const maxItem = nonZeroData.reduce((max, item) => 
-            item.val > max.val ? item : max
-        );
-        const minItem = nonZeroData.reduce((min, item) => 
-            item.val < min.val ? item : min
-        );
-        
-        const maxIndex = maxItem.idx;
-        const minIndex = minItem.idx;
-        const currentIndex = total - 1;
-        
-        // Special labels get colored backgrounds
-        if (idx === currentIndex) return 'rgba(59, 130, 246, 0.1)';   // Blue tint
-        if (idx === maxIndex) return 'rgba(16, 185, 129, 0.1)';       // Green tint
-        if (idx === minIndex) return 'rgba(239, 68, 68, 0.1)';        // Red tint
-        
-        return 'rgba(255, 255, 255, 0.9)';
-    },
-    borderColor: '#e2e8f0',
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 4
-},
-    scales: {
-                y: {
-                    beginAtZero: false,
-                    title: {
-                        display: true,
-                        text: config.yAxisLabel,
-                        font: { size: 12, weight: '600' },
-                        color: '#374151'
-                    },
-                    ticks: {
-                        font: { size: 10 },
-                        color: '#64748b',
-                        callback: v => v.toLocaleString()
-                    },
-                    grid: {
-                        display: false,
-                        drawBorder: false
-                    }
-                },
-                x: {
-                    border: {
-                        display: false
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45,
-                        font: { size: 9 },
-                        color: '#64748b',
-                        maxTicksLimit: 12,
-                        autoSkip: true
-                    },
-                      grid: {
-        display: false,
-        drawBorder: false
-    }
-}
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                    padding: 12,
+                    font: { size: 11 },
+                    color: '#374151'
                 }
             },
-            plugins: [ChartDataLabels]
-        });
-    
-    canvas.chartInstance = chart;
-    console.log(`✅ Created clean chart: ${canvasId}`);
-    
-    return chart;
+            tooltip: {
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                titleColor: '#1e293b',
+                bodyColor: '#374151',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                padding: 12
+            },
+            datalabels: {
+                display: function (context) {
+                    if (!config.showLabels || context.datasetIndex !== 0) return false;
+                    const idx = context.dataIndex;
+                    const total = context.dataset.data.length;
+                    const data = context.dataset.data;
+
+                    const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+                    if (nonZeroData.length === 0) return false;
+
+                    const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+                    const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+
+                    const maxIndex = maxItem.idx;
+                    const minIndex = minItem.idx;
+                    const currentIndex = total - 1;
+                    const previousIndex = total - 2;
+
+                    return idx === currentIndex || idx === previousIndex || idx === maxIndex || idx === minIndex;
+                },
+                align: function (context) {
+                    const idx = context.dataIndex;
+                    const data = context.dataset.data;
+                    const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+                    if (nonZeroData.length === 0) return 'top';
+                    const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+                    const minIndex = minItem.idx;
+                    if (idx === minIndex) return 'bottom';
+                    return 'top';
+                },
+                offset: 8,
+                font: function (context) {
+                    const idx = context.dataIndex;
+                    const total = context.dataset.data.length;
+                    const data = context.dataset.data;
+                    const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+                    if (nonZeroData.length === 0) {
+                        return { size: 10, weight: '600' };
+                    }
+                    const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+                    const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+                    const maxIndex = maxItem.idx;
+                    const minIndex = minItem.idx;
+                    const currentIndex = total - 1;
+                    if (idx === currentIndex || idx === maxIndex || idx === minIndex) {
+                        return { size: 11, weight: 'bold' };
+                    }
+                    return { size: 10, weight: '600' };
+                },
+                color: function (context) {
+                    const idx = context.dataIndex;
+                    const total = context.dataset.data.length;
+                    const data = context.dataset.data;
+                    const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+                    if (nonZeroData.length === 0) {
+                        return '#64748b';
+                    }
+                    const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+                    const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+                    const maxIndex = maxItem.idx;
+                    const minIndex = minItem.idx;
+                    const currentIndex = total - 1;
+                    if (idx === currentIndex) return '#3b82f6';
+                    if (idx === maxIndex) return '#10b981';
+                    if (idx === minIndex) return '#ef4444';
+                    return '#64748b';
+                },
+                formatter: function (value, context) {
+                    const idx = context.dataIndex;
+                    const total = context.dataset.data.length;
+                    const data = context.dataset.data;
+                    const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+                    if (nonZeroData.length === 0) {
+                        return Math.round(value).toLocaleString();
+                    }
+                    const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+                    const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+                    const maxIndex = maxItem.idx;
+                    const minIndex = minItem.idx;
+                    const currentIndex = total - 1;
+                    const roundedValue = Math.round(value);
+                    if (idx === currentIndex) return `CURRENT: ${roundedValue.toLocaleString()}`;
+                    if (idx === maxIndex) return `HIGHEST: ${roundedValue.toLocaleString()}`;
+                    if (idx === minIndex) return `LOWEST: ${roundedValue.toLocaleString()}`;
+                    return roundedValue.toLocaleString();
+                },
+                backgroundColor: function (context) {
+                    const idx = context.dataIndex;
+                    const total = context.dataset.data.length;
+                    const data = context.dataset.data;
+                    const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+                    if (nonZeroData.length === 0) {
+                        return 'rgba(255, 255, 255, 0.9)';
+                    }
+                    const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+                    const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+                    const maxIndex = maxItem.idx;
+                    const minIndex = minItem.idx;
+                    const currentIndex = total - 1;
+                    if (idx === currentIndex) return 'rgba(59, 130, 246, 0.1)';
+                    if (idx === maxIndex) return 'rgba(16, 185, 129, 0.1)';
+                    if (idx === minIndex) return 'rgba(239, 68, 68, 0.1)';
+                    return 'rgba(255, 255, 255, 0.9)';
+                },
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                borderRadius: 4,
+                padding: 4
+            }
+        }, // ✅ END plugins
+
+        scales: {
+            y: {
+                beginAtZero: false,
+                title: {
+                    display: true,
+                    text: config.yAxisLabel,
+                    font: { size: 12, weight: '600' },
+                    color: '#374151'
+                },
+                ticks: {
+                    font: { size: 10 },
+                    color: '#64748b',
+                    callback: v => v.toLocaleString()
+                },
+                grid: {
+                    display: false,
+                    drawBorder: false
+                }
+            },
+            x: {
+                border: { display: false },
+                ticks: {
+                    maxRotation: 45,
+                    minRotation: 45,
+                    font: { size: 9 },
+                    color: '#64748b',
+                    maxTicksLimit: 12,
+                    autoSkip: true
+                },
+                grid: {
+                    display: false,
+                    drawBorder: false
+                }
+            }
+        } // ✅ END scales
+    }, // ✅ END options
+    plugins: [ChartDataLabels]
+});
+
+canvas.chartInstance = chart;
+console.log(`✅ Created clean chart: ${canvasId}`);
+return chart;
 }
 
 // ==================== REAL NATIONAL WEEKLY CHART FUNCTION ====================
