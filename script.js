@@ -227,7 +227,7 @@ function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null
 
 async function createRealNationalWeeklyChart() {
     try {
-        console.log('📊 CREATING SIMPLIFIED ACTUAL VS TARGET CHART...');
+        console.log('📊 CREATING TOTAL ORDERS CHART WITH TARGET, ACTUAL, AND AVERAGE...');
         
         // Load weekly data if not already loaded
         if (!window.weeklyData) {
@@ -242,11 +242,15 @@ async function createRealNationalWeeklyChart() {
         const nationalData = window.weeklyData.national['ALL PRODUCT']; 
         console.log(`✅ Using ${nationalData.weeks.length} weeks of national data`);
         
-        // Calculate XmR control metrics (still needed for page metrics if used elsewhere)
+        // Calculate XmR control metrics
         const metrics = calculateXmRMetrics(nationalData.actualOrders);
-        console.log('📈 Metrics calculated for reference');
+        console.log('📈 XmR Control Metrics:', metrics);
         
-        // Detect anomalies (for page metrics if needed)
+        // Calculate average line (centerLineX is the average of actual orders)
+        const averageLine = metrics.centerLineX;
+        console.log(`📊 Average Line: ${averageLine}`);
+        
+        // Detect anomalies
         const anomalies = detectAnomalies(nationalData.actualOrders, metrics);
         console.log(`🔍 Detected ${anomalies.length} anomalies`);
         
@@ -262,7 +266,7 @@ async function createRealNationalWeeklyChart() {
             canvas.chartInstance.destroy();
         }
         
-        // ✅ SIMPLIFIED CHART - Only Actual vs Target
+        // ✅ ENHANCED CHART - Target, Actual, and Average
         const chart = new Chart(canvas, {
             type: 'line',
             data: {
@@ -280,13 +284,14 @@ async function createRealNationalWeeklyChart() {
                         pointHoverRadius: 8,
                         tension: 0.3,
                         borderWidth: 3,
-                        fill: true
+                        fill: true,
+                        order: 1
                     },
                     {
                         label: 'Target',
                         data: nationalData.targets,
                         borderColor: '#f97316',
-                        backgroundColor: 'rgba(249, 115, 22, 0.05)',
+                        backgroundColor: 'transparent',
                         pointBackgroundColor: '#f97316',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
@@ -295,7 +300,20 @@ async function createRealNationalWeeklyChart() {
                         tension: 0.1,
                         borderWidth: 3,
                         borderDash: [5, 5],
-                        fill: false
+                        fill: false,
+                        order: 2
+                    },
+                    {
+                        label: 'Average',
+                        data: Array(nationalData.weeks.length).fill(averageLine),
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        tension: 0,
+                        borderWidth: 2,
+                        borderDash: [8, 4],
+                        fill: false,
+                        order: 3
                     }
                 ]
             },
@@ -340,8 +358,8 @@ async function createRealNationalWeeklyChart() {
                                 family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                             },
                             color: '#374151',
-                            boxWidth: 8,
-                            boxHeight: 8
+                            boxWidth: 10,
+                            boxHeight: 10
                         }
                     },
                     tooltip: {
@@ -380,7 +398,8 @@ async function createRealNationalWeeklyChart() {
                                 return [
                                     '',
                                     `Achievement: ${achievement}%`,
-                                    `Gap: ${gapSign}${gap.toLocaleString()} orders`
+                                    `Gap: ${gapSign}${gap.toLocaleString()} orders`,
+                                    `Average: ${averageLine.toLocaleString()}`
                                 ];
                             }
                         }
@@ -444,18 +463,15 @@ async function createRealNationalWeeklyChart() {
         });
         
         canvas.chartInstance = chart;
-        console.log('✅ Simplified actual vs target chart created successfully!');
+        console.log('✅ Total Orders chart with Target, Actual, and Average created successfully!');
         
-        // Update page metrics if elements exist
+        // Update page metrics
         updatePageMetrics(nationalData, metrics, anomalies);
         
     } catch (error) {
-        console.error('❌ Error creating simplified chart:', error);
+        console.error('❌ Error creating chart:', error);
     }
 }
-
-
-
 
 
 // Update page metrics display
@@ -1038,53 +1054,48 @@ async function createRegionalBreakdownCharts() {
     console.log('✅ All regional breakdown charts created successfully!');
 }
 
-function updatePageMetrics(data, metrics, anomalies) {
+function updatePageMetrics(nationalData, metrics, anomalies) {
     try {
-        // Current Week
+        const weeks = nationalData.weeks;
+        const actualOrders = nationalData.actualOrders;
+        
+        // Get current week and previous week data
+        const currentWeek = actualOrders[actualOrders.length - 1];
+        const previousWeek = actualOrders[actualOrders.length - 2];
+        
+        // Calculate growth percentage
+        const growth = previousWeek ? (((currentWeek - previousWeek) / previousWeek) * 100) : 0;
+        const growthFormatted = growth >= 0 ? `+${growth.toFixed(1)}%` : `${growth.toFixed(1)}%`;
+        
+        // Update Current Week
         const currentWeekElement = document.getElementById('currentWeek');
-        if (currentWeekElement && data.actualOrders.length > 0) {
-            currentWeekElement.textContent = data.actualOrders[data.actualOrders.length - 1].toLocaleString();
+        if (currentWeekElement) {
+            currentWeekElement.textContent = currentWeek.toLocaleString();
         }
         
-        // Previous Week
+        // Update Previous Week
         const previousWeekElement = document.getElementById('previousWeek');
-        if (previousWeekElement && data.actualOrders.length > 1) {
-            previousWeekElement.textContent = data.actualOrders[data.actualOrders.length - 2].toLocaleString();
+        if (previousWeekElement) {
+            previousWeekElement.textContent = previousWeek.toLocaleString();
         }
         
-        // Center Line
-        const centerLineElement = document.getElementById('centerLine');
-        if (centerLineElement) {
-            centerLineElement.textContent = metrics.centerLineX.toFixed(0);  // ✅ Changed from centerLine
-        }
-
-        // Upper Limit
-        const upperLimitElement = document.getElementById('upperLimit');
-        if (upperLimitElement) {
-            upperLimitElement.textContent = metrics.upperNaturalProcessLimit.toFixed(0);  // ✅ Changed from upperLimit
-        }
-
-        // Lower Limit
-        const lowerLimitElement = document.getElementById('lowerLimit');
-        if (lowerLimitElement) {
-            upperLimitElement.textContent = metrics.lowerNaturalProcessLimit.toFixed(0);  // ✅ Changed from lowerLimit
-        }
-        
-        // Process Status
-        const processStatusElement = document.getElementById('processStatus');
-        if (processStatusElement) {
-            if (anomalies.length > 0) {
-                processStatusElement.textContent = 'Anomalies Detected';
-                processStatusElement.className = 'status-anomaly';
+        // Update Growth %
+        const growthElement = document.getElementById('growthPercent');
+        if (growthElement) {
+            growthElement.textContent = growthFormatted;
+            // Add color based on growth direction
+            if (growth > 0) {
+                growthElement.style.color = '#10b981'; // Green for positive
+            } else if (growth < 0) {
+                growthElement.style.color = '#ef4444'; // Red for negative
             } else {
-                processStatusElement.textContent = 'In Control';
-                processStatusElement.className = 'status-normal';
+                growthElement.style.color = '#64748b'; // Gray for zero
             }
         }
         
-        console.log('✅ Page metrics updated');
+        console.log('✅ Page metrics updated successfully');
     } catch (error) {
-        console.error('⚠️ Error updating page metrics:', error);
+        console.error('❌ Error updating page metrics:', error);
     }
 }
 
