@@ -250,17 +250,15 @@ async function createRealNationalWeeklyChart() {
         const maxIndex = nationalData.actualOrders.indexOf(maxValue);
         const minIndex = nationalData.actualOrders.indexOf(minValue);
         
-        const currentIndex = nationalData.actualOrders.length - 1;
-        const labelIndices = new Set([
-            currentIndex,
-            currentIndex - 1,
-            currentIndex - 2,
-            currentIndex - 3,
-            currentIndex - 4,
-            maxIndex,
-            minIndex
-        ]);
-        
+       const currentIndex = nationalData.actualOrders.length - 1;
+    const labelIndices = new Set([
+    currentIndex,      // Current week
+    currentIndex - 1,  // Week -1
+    currentIndex - 2,  // Week -2
+    maxIndex,          // Highest
+    minIndex           // Lowest
+]);
+console.log('🏷️ Will show labels at indices:', Array.from(labelIndices));
         const canvas = document.getElementById('nationalWeeklyChart');
         if (!canvas) {
             console.error('❌ Canvas #nationalWeeklyChart not found!');
@@ -349,31 +347,41 @@ async function createRealNationalWeeklyChart() {
                         borderWidth: 1,
                         padding: 12
                     },
-                    datalabels: {
-                        display: function(context) {
-                            return labelIndices.has(context.dataIndex);
-                        },
-                        align: function(context) {
-                            return context.dataIndex === minIndex ? 'bottom' : 'top';
-                        },
-                        offset: 8,
-                        font: function(context) {
-                            const idx = context.dataIndex;
-                            if (idx === maxIndex || idx === minIndex) {
-                                return { size: 11, weight: 'bold' };
-                            }
-                            return { size: 10, weight: '600' };
-                        },
-                        color: function(context) {
-                            const idx = context.dataIndex;
-                            if (idx === maxIndex) return '#10b981';
-                            if (idx === minIndex) return '#ef4444';
-                            return '#1e293b';
-                        },
-                        formatter: function(value) {
-                            return value.toLocaleString();
-                        }
-                    }
+                    ddatalabels: {
+    display: function(context) {
+        return labelIndices.has(context.dataIndex);
+    },
+    align: function(context) {
+        const idx = context.dataIndex;
+        if (idx === minIndex) return 'bottom';
+        return 'top';
+    },
+    offset: 8,
+    font: function(context) {
+        const idx = context.dataIndex;
+        if (idx === maxIndex || idx === minIndex) {
+            return { size: 11, weight: 'bold' };
+        }
+        if (idx === currentIndex) {
+            return { size: 11, weight: 'bold' };
+        }
+        return { size: 10, weight: '600' };
+    },
+    color: function(context) {
+        const idx = context.dataIndex;
+        if (idx === maxIndex) return '#10b981'; // Green for highest
+        if (idx === minIndex) return '#ef4444'; // Red for lowest
+        if (idx === currentIndex) return '#3b82f6'; // Blue for current
+        return '#64748b'; // Gray for others
+    },
+    formatter: function(value, context) {
+        const idx = context.dataIndex;
+        if (idx === maxIndex) return `HIGHEST: ${value.toLocaleString()}`;
+        if (idx === minIndex) return `LOWEST: ${value.toLocaleString()}`;
+        if (idx === currentIndex) return `CURRENT: ${value.toLocaleString()}`;
+        return value.toLocaleString(); // Just number for previous weeks
+    }
+}
                 },
                 scales: {
                     y: {
@@ -388,19 +396,30 @@ async function createRealNationalWeeklyChart() {
                             drawBorder: false
                         }
                     },
-                    x: {
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45,
-                            font: { size: 9 },
-                            color: '#64748b',
-                            maxTicksLimit: 15
-                        },
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        }
-                    }
+                 x: {
+    border: {
+        display: false
+    },
+    ticks: {
+        maxRotation: 45,
+        minRotation: 45,
+        font: { size: 9 },
+        color: '#64748b',
+        maxTicksLimit: 12,  // ✅ Show only 12 week labels on X-axis
+        autoSkip: true,     // ✅ Auto-skip to prevent overlap
+        callback: function(value, index, ticks) {
+            // Show every 2nd or 3rd week label
+            if (index % 2 === 0) {
+                return this.getLabelForValue(value);
+            }
+            return '';
+        }
+    },
+    grid: {
+        display: false,
+        drawBorder: false
+    }
+}
                 }
             },
             plugins: [ChartDataLabels]
@@ -416,13 +435,12 @@ async function createRealNationalWeeklyChart() {
         console.error('❌ Error creating weekly chart:', error);
     }
 }
-
 function createMonthlyChart(weeks, actualOrders, targets) {
     try {
         console.log('📊 Creating Monthly Chart...');
         
         const monthlyData = aggregateMonthlyData(weeks, actualOrders, targets);
-        const last7Months = monthlyData.slice(-7);
+        const last6Months = monthlyData.slice(-6);
         
         const canvas = document.getElementById('monthlyChart');
         if (!canvas) {
@@ -437,19 +455,19 @@ function createMonthlyChart(weeks, actualOrders, targets) {
         const chart = new Chart(canvas, {
             type: 'bar',
             data: {
-                labels: last7Months.map(m => m.label),
+                labels: last6Months.map(m => m.label),
                 datasets: [
                     {
                         label: 'Actual',
-                        data: last7Months.map(m => m.actual),
+                        data: last6Months.map(m => m.actual),
                         backgroundColor: '#3b82f6',
-                        barThickness: 30
+                        barThickness: 25
                     },
                     {
                         label: 'Target',
-                        data: last7Months.map(m => m.target),
+                        data: last6Months.map(m => m.target),
                         backgroundColor: '#f59e0b',
-                        barThickness: 30
+                        barThickness: 25
                     }
                 ]
             },
@@ -462,7 +480,7 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                         position: 'bottom',
                         labels: {
                             usePointStyle: true,
-                            padding: 10,
+                            padding: 8,
                             font: { size: 10 },
                             boxWidth: 10,
                             boxHeight: 10
@@ -474,10 +492,13 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                         bodyColor: '#374151',
                         borderColor: '#e2e8f0',
                         borderWidth: 1,
+                        padding: 10,
+                        titleFont: { size: 11 },
+                        bodyFont: { size: 10 },
                         callbacks: {
                             afterBody: function(tooltipItems) {
                                 const idx = tooltipItems[0].dataIndex;
-                                const month = last7Months[idx];
+                                const month = last6Months[idx];
                                 const achievement = ((month.actual / month.target) * 100).toFixed(1);
                                 return [`Achievement: ${achievement}%`];
                             }
@@ -485,17 +506,18 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                     },
                     datalabels: {
                         display: function(context) {
-                            return context.datasetIndex === 0;
+                            return context.datasetIndex === 0; // Only show on Actual bars
                         },
                         anchor: 'end',
                         align: 'top',
-                        offset: 4,
+                        offset: 2,
                         font: { size: 9, weight: 'bold' },
                         color: '#1e293b',
                         formatter: function(value, context) {
-                            const month = last7Months[context.dataIndex];
-                            const achievement = ((month.actual / month.target) * 100).toFixed(1);
-                            return `${achievement}%`;
+                            const month = last6Months[context.dataIndex];
+                            const achievement = ((month.actual / month.target) * 100).toFixed(0);
+                            const icon = achievement >= 100 ? '✅' : achievement >= 90 ? '🔶' : '❌';
+                            return `${achievement}%${icon}`;
                         }
                     }
                 },
@@ -503,24 +525,22 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                     y: {
                         beginAtZero: true,
                         border: {
-                            display: false  // Remove Y-axis border
+                            display: false  // ✅ Remove Y-axis border
                         },
                         grid: {
-                            display: false,  // Remove horizontal grid lines
+                            display: false,  // ✅ Remove all grid lines
                             drawBorder: false
                         },
                         ticks: {
-                            font: { size: 9 },
-                            color: '#64748b',
-                            callback: v => v.toLocaleString()
+                            display: false  // ✅ Hide Y-axis numbers
                         }
                     },
                     x: {
                         border: {
-                            display: false  // Remove X-axis border
+                            display: false  // ✅ Remove X-axis border
                         },
                         grid: {
-                            display: false,  // Remove vertical grid lines
+                            display: false,  // ✅ Remove all grid lines
                             drawBorder: false
                         },
                         ticks: {
@@ -534,12 +554,13 @@ function createMonthlyChart(weeks, actualOrders, targets) {
         });
         
         canvas.chartInstance = chart;
-        console.log('✅ Monthly chart created successfully');
+        console.log('✅ Monthly chart created - Clean version with no grid lines');
         
     } catch (error) {
         console.error('❌ Error creating monthly chart:', error);
     }
 }
+
 function aggregateMonthlyData(weeks, actualOrders, targets) {
     const monthlyMap = new Map();
     const now = new Date();
