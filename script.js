@@ -354,39 +354,46 @@ function createUniversalCleanChart(canvasId, labels, actualData, targetData = nu
                     borderWidth: 1,
                     padding: 12
                 },
-                datalabels: {
-                    display: function(context) {
-                        if (!config.showLabels) return false;
-                        const idx = context.dataIndex;
-                        const total = context.dataset.data.length;
-                        return idx >= total - config.labelsCount && context.datasetIndex === 0;
-                    },
-                    align: 'top',
-                    offset: 8,
-                    font: function(context) {
-                        const idx = context.dataIndex;
-                        const total = context.dataset.data.length;
-                        if (idx === total - 1) {
-                            return { size: 11, weight: 'bold' };
-                        }
-                        return { size: 10, weight: '600' };
-                    },
-                    color: function(context) {
-                        const idx = context.dataIndex;
-                        const total = context.dataset.data.length;
-                        if (idx === total - 1) return '#3b82f6';
-                        return '#64748b';
-                    },
-                    formatter: function(value, context) {
-                        const idx = context.dataIndex;
-                        const total = context.dataset.data.length;
-                        if (idx === total - 1) {
-                            return `CURRENT: ${value.toLocaleString()}`;
-                        }
-                        return value.toLocaleString();
-                    }
-                }
-            },
+         datalabels: {
+    display: function(context) {
+        if (!config.showLabels) return false;
+        const idx = context.dataIndex;
+        const total = context.dataset.data.length;
+        
+        // ✅ ONLY SHOW: Current week + Previous 1 week (2 labels total)
+        return (idx === total - 1 || idx === total - 2) && context.datasetIndex === 0;
+    },
+    align: 'top',
+    offset: 8,
+    font: function(context) {
+        const idx = context.dataIndex;
+        const total = context.dataset.data.length;
+        
+        if (idx === total - 1) {
+            return { size: 11, weight: 'bold' };  // Current week
+        }
+        return { size: 10, weight: '600' };  // Previous week
+    },
+    color: function(context) {
+        const idx = context.dataIndex;
+        const total = context.dataset.data.length;
+        
+        if (idx === total - 1) return '#3b82f6';  // Current - blue
+        return '#64748b';  // Previous - gray
+    },
+    formatter: function(value, context) {
+        const idx = context.dataIndex;
+        const total = context.dataset.data.length;
+        
+        // ✅ ROUND TO INTEGER
+        const roundedValue = Math.round(value);
+        
+        if (idx === total - 1) {
+            return `CURRENT: ${roundedValue.toLocaleString()}`;
+        }
+        return roundedValue.toLocaleString();
+    }
+}
             scales: {
                 y: {
                     beginAtZero: false,
@@ -1179,12 +1186,30 @@ function createChartMonthlyView(canvasId, weeks, actualOrders, targets, chartNam
                         display: function(context) {
                             const idx = context.dataIndex;
                             const totalMonths = context.chart.data.labels.length;
+                            
+                            // ✅ Show labels only for last 5 months AND only on Actual bars
                             return idx >= totalMonths - 5 && context.datasetIndex === 0;
                         },
                         anchor: 'end',
-                        align: 'top',
-                        offset: 2,
-                        font: { size: 10, weight: 'bold' },
+                        align: function(context) {
+                            // ✅ FIX OVERLAP: Alternate positioning
+                            const idx = context.dataIndex;
+                            const datasetIndex = context.datasetIndex;
+                            
+                            // Only show on Actual bars (datasetIndex 0)
+                            if (datasetIndex === 0) {
+                                return 'top';
+                            }
+                            return 'center';
+                        },
+                        offset: function(context) {
+                            // ✅ Add more offset to prevent overlap
+                            return 6;
+                        },
+                        font: { 
+                            size: 9,  // ✅ Slightly smaller font
+                            weight: 'bold' 
+                        },
                         color: function(context) {
                             const idx = context.dataIndex;
                             const totalMonths = context.chart.data.labels.length;
@@ -1195,8 +1220,19 @@ function createChartMonthlyView(canvasId, weeks, actualOrders, targets, chartNam
                             const month = last6Months[context.dataIndex];
                             const achievement = ((month.actual / month.target) * 100).toFixed(0);
                             const icon = achievement >= 100 ? '✅' : achievement >= 90 ? '🔶' : '❌';
+                            
+                            // ✅ Show achievement percentage with icon
                             return `${achievement}%${icon}`;
-                        }
+                        },
+                        // ✅ Add padding to prevent overlap
+                        padding: 2,
+                        // ✅ Background for better readability
+                        backgroundColor: function(context) {
+                            return 'rgba(255, 255, 255, 0.8)';
+                        },
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        borderRadius: 4
                     }
                 },
                 scales: {
@@ -1429,123 +1465,194 @@ function updateChartMTDScorecard(prefix, weeks, actualOrders) {
 }
 // ==================== PRODUCT CHARTS ====================
 
-// Create Product XmR Charts
+// Create Product Clean Charts with Side-by-Side Weekly + Monthly
 async function createProductXmRCharts() {
-    console.log('📊 Creating Product XmR Charts...');
+    console.log('📊 Creating Product Charts with Weekly + Monthly Views...');
     
     if (!window.weeklyData || !window.weeklyData.national) {
         console.error('❌ Product data not available');
         return;
     }
     
-    const products = {
-        'ANDROID': { canvasId: 'androidChart', mrCanvasId: 'androidMRChart' },
-        'SAKU INSURANCE': { canvasId: 'sakuInsuranceChart', mrCanvasId: 'sakuInsuranceMRChart' },
-        'SAKU NON INSURANCE': { canvasId: 'sakuNonInsuranceChart', mrCanvasId: 'sakuNonInsuranceMRChart' }
-    };
+    const products = [
+        { name: 'ANDROID', canvasId: 'androidChart', monthlyCanvasId: 'androidMonthlyChart', prefix: 'android' },
+        { name: 'SAKU INSURANCE', canvasId: 'sakuInsuranceChart', monthlyCanvasId: 'sakuInsuranceMonthlyChart', prefix: 'sakuInsurance' },
+        { name: 'SAKU NON INSURANCE', canvasId: 'sakuNonInsuranceChart', monthlyCanvasId: 'sakuNonInsuranceMonthlyChart', prefix: 'sakuNonInsurance' }
+    ];
     
-    Object.entries(products).forEach(([productName, canvasIds]) => {
-        const productData = window.weeklyData.national[productName];
+    products.forEach(product => {
+        const productData = window.weeklyData.national[product.name];
         
         if (!productData) {
-            console.warn(`⚠️ No data for ${productName}`);
+            console.warn(`⚠️ No data for ${product.name}`);
             return;
         }
         
-        const metrics = calculateXmRMetrics(productData.actualOrders);
-        const anomalies = detectAnomalies(productData.actualOrders, metrics);
+        // Update Weekly Scorecard
+        updateChartScorecard(product.prefix, productData);
         
-        createXChart(canvasIds.canvasId, productData, metrics, `${productName} - Orders`);
-        createMRChart(canvasIds.mrCanvasId, productData, metrics);
+        // Update Monthly Scorecard
+        updateChartMTDScorecard(product.prefix, productData.weeks, productData.actualOrders);
         
-        console.log(`   ✅ ${productName} charts created`);
+        // Create Weekly Chart
+        createUniversalCleanChart(
+            product.canvasId,
+            productData.weeks,
+            productData.actualOrders,
+            productData.targets,
+            {
+                title: `${product.name} - Weekly Performance`,
+                yAxisLabel: 'Orders',
+                showAverage: true,
+                showLabels: true,
+                labelsCount: 2  // ✅ Only 2 labels
+            }
+        );
+        
+        // Create Monthly Chart
+        createChartMonthlyView(
+            product.monthlyCanvasId,
+            productData.weeks,
+            productData.actualOrders,
+            productData.targets,
+            product.name
+        );
+        
+        console.log(`   ✅ ${product.name} weekly + monthly charts created`);
     });
 }
-
 // ==================== AREA CHARTS ====================
 
 // Create Area XmR Charts
+// Create Area Clean Charts with Side-by-Side Weekly + Monthly
 async function createAreaXmRCharts() {
-    console.log('📊 Creating Area XmR Charts...');
+    console.log('📊 Creating Area Charts with Weekly + Monthly Views...');
     
     if (!window.weeklyData || !window.weeklyData.areas) {
         console.error('❌ Area data not available');
         return;
     }
     
-    const areaCanvasMapping = {
-        'BALI NUSRA': { canvasId: 'baliNusraChart', mrCanvasId: 'baliNusraMRChart' },
-        'JAKARTA': { canvasId: 'jakartaChart', mrCanvasId: 'jakartaMRChart' },
-        'JAVA 1': { canvasId: 'java1Chart', mrCanvasId: 'java1MRChart' },
-        'JAVA 2': { canvasId: 'java2Chart', mrCanvasId: 'java2MRChart' },
-        'JAVA 3': { canvasId: 'java3Chart', mrCanvasId: 'java3MRChart' },
-        'KALIMANTAN': { canvasId: 'kalimantanChart', mrCanvasId: 'kalimantanMRChart' },
-        'SULAWESI': { canvasId: 'sulawesiChart', mrCanvasId: 'sulawesiMRChart' },
-        'SUMATERA 1': { canvasId: 'sumatera1Chart', mrCanvasId: 'sumatera1MRChart' },
-        'SUMATERA 2': { canvasId: 'sumatera2Chart', mrCanvasId: 'sumatera2MRChart' },
-        'SUMATERA 3': { canvasId: 'sumatera3Chart', mrCanvasId: 'sumatera3MRChart' }
-    };
+    const areas = [
+        { name: 'BALI NUSRA', canvasId: 'baliNusraChart', monthlyCanvasId: 'baliNusraMonthlyChart', prefix: 'baliNusra' },
+        { name: 'JAKARTA', canvasId: 'jakartaChart', monthlyCanvasId: 'jakartaMonthlyChart', prefix: 'jakarta' },
+        { name: 'JAVA 1', canvasId: 'java1Chart', monthlyCanvasId: 'java1MonthlyChart', prefix: 'java1' },
+        { name: 'JAVA 2', canvasId: 'java2Chart', monthlyCanvasId: 'java2MonthlyChart', prefix: 'java2' },
+        { name: 'JAVA 3', canvasId: 'java3Chart', monthlyCanvasId: 'java3MonthlyChart', prefix: 'java3' },
+        { name: 'KALIMANTAN', canvasId: 'kalimantanChart', monthlyCanvasId: 'kalimantanMonthlyChart', prefix: 'kalimantan' },
+        { name: 'SULAWESI', canvasId: 'sulawesiChart', monthlyCanvasId: 'sulawesiMonthlyChart', prefix: 'sulawesi' },
+        { name: 'SUMATERA 1', canvasId: 'sumatera1Chart', monthlyCanvasId: 'sumatera1MonthlyChart', prefix: 'sumatera1' },
+        { name: 'SUMATERA 2', canvasId: 'sumatera2Chart', monthlyCanvasId: 'sumatera2MonthlyChart', prefix: 'sumatera2' },
+        { name: 'SUMATERA 3', canvasId: 'sumatera3Chart', monthlyCanvasId: 'sumatera3MonthlyChart', prefix: 'sumatera3' }
+    ];
     
-    Object.entries(areaCanvasMapping).forEach(([areaName, canvasIds]) => {
-        const areaData = window.weeklyData.areas[areaName];
+    areas.forEach(area => {
+        const areaData = window.weeklyData.areas[area.name];
         
         if (!areaData) {
-            console.warn(`⚠️ No data for ${areaName}`);
+            console.warn(`⚠️ No data for ${area.name}`);
             return;
         }
         
-        const metrics = calculateXmRMetrics(areaData.actualOrders);
-        const anomalies = detectAnomalies(areaData.actualOrders, metrics);
+        // Update Weekly Scorecard
+        updateChartScorecard(area.prefix, areaData);
         
-        createXChart(canvasIds.canvasId, areaData, metrics, `${areaName} - Total Orders`);
-        createMRChart(canvasIds.mrCanvasId, areaData, metrics);
+        // Update Monthly Scorecard
+        updateChartMTDScorecard(area.prefix, areaData.weeks, areaData.actualOrders);
         
-        console.log(`   ✅ ${areaName} charts created`);
+        // Create Weekly Chart
+        createUniversalCleanChart(
+            area.canvasId,
+            areaData.weeks,
+            areaData.actualOrders,
+            areaData.targets,
+            {
+                title: `${area.name} - Weekly Performance`,
+                yAxisLabel: 'Orders',
+                showAverage: true,
+                showLabels: true,
+                labelsCount: 2  // ✅ Only 2 labels
+            }
+        );
+        
+        // Create Monthly Chart
+        createChartMonthlyView(
+            area.monthlyCanvasId,
+            areaData.weeks,
+            areaData.actualOrders,
+            areaData.targets,
+            area.name
+        );
+        
+        console.log(`   ✅ ${area.name} weekly + monthly charts created`);
     });
 }
 
 // ==================== ANDROID AREA CHARTS ====================
 
-// Create Android Area XmR Charts
+// Create Android Area Clean Charts with Side-by-Side Weekly + Monthly
 async function createAndroidAreaXmRCharts() {
-    console.log('📊 Creating Android Area XmR Charts...');
+    console.log('📊 Creating Android Area Charts with Weekly + Monthly Views...');
     
     if (!window.weeklyData || !window.weeklyData.androidAreas) {
         console.error('❌ Android Area data not available');
         return;
     }
     
-   const androidAreaCanvasMapping = {
-    'BALI NUSRA': { canvasId: 'androidBaliNusraChart', mrCanvasId: 'androidBaliNusraMRChart' },
-    'JAKARTA': { canvasId: 'androidJakartaChart', mrCanvasId: 'androidJakartaMRChart' },
-    'JAVA 1': { canvasId: 'androidJava1Chart', mrCanvasId: 'androidJava1MRChart' },
-    'JAVA 2': { canvasId: 'androidJava2Chart', mrCanvasId: 'androidJava2MRChart' },
-    'JAVA 3': { canvasId: 'androidJava3Chart', mrCanvasId: 'androidJava3MRChart' },
-    'KALIMANTAN': { canvasId: 'androidKalimantanChart', mrCanvasId: 'androidKalimantanMRChart' },
-    'SULAWESI': { canvasId: 'androidSulawesiChart', mrCanvasId: 'androidSulawesiMRChart' },
-    'SUMATERA 1': { canvasId: 'androidSumatera1Chart', mrCanvasId: 'androidSumatera1MRChart' },
-    'SUMATERA 2': { canvasId: 'androidSumatera2Chart', mrCanvasId: 'androidSumatera2MRChart' },
-    'SUMATERA 3': { canvasId: 'androidSumatera3Chart', mrCanvasId: 'androidSumatera3MRChart' }
-};
+    const androidAreas = [
+        { name: 'BALI NUSRA', canvasId: 'androidBaliNusraChart', monthlyCanvasId: 'androidBaliNusraMonthlyChart', prefix: 'androidBaliNusra' },
+        { name: 'JAKARTA', canvasId: 'androidJakartaChart', monthlyCanvasId: 'androidJakartaMonthlyChart', prefix: 'androidJakarta' },
+        { name: 'JAVA 1', canvasId: 'androidJava1Chart', monthlyCanvasId: 'androidJava1MonthlyChart', prefix: 'androidJava1' },
+        { name: 'JAVA 2', canvasId: 'androidJava2Chart', monthlyCanvasId: 'androidJava2MonthlyChart', prefix: 'androidJava2' },
+        { name: 'JAVA 3', canvasId: 'androidJava3Chart', monthlyCanvasId: 'androidJava3MonthlyChart', prefix: 'androidJava3' },
+        { name: 'KALIMANTAN', canvasId: 'androidKalimantanChart', monthlyCanvasId: 'androidKalimantanMonthlyChart', prefix: 'androidKalimantan' },
+        { name: 'SULAWESI', canvasId: 'androidSulawesiChart', monthlyCanvasId: 'androidSulawesiMonthlyChart', prefix: 'androidSulawesi' },
+        { name: 'SUMATERA 1', canvasId: 'androidSumatera1Chart', monthlyCanvasId: 'androidSumatera1MonthlyChart', prefix: 'androidSumatera1' },
+        { name: 'SUMATERA 2', canvasId: 'androidSumatera2Chart', monthlyCanvasId: 'androidSumatera2MonthlyChart', prefix: 'androidSumatera2' },
+        { name: 'SUMATERA 3', canvasId: 'androidSumatera3Chart', monthlyCanvasId: 'androidSumatera3MonthlyChart', prefix: 'androidSumatera3' }
+    ];
     
-    Object.entries(androidAreaCanvasMapping).forEach(([areaName, canvasIds]) => {
-        const androidAreaData = window.weeklyData.androidAreas[areaName];
+    androidAreas.forEach(area => {
+        const androidAreaData = window.weeklyData.androidAreas[area.name];
         
         if (!androidAreaData) {
-            console.warn(`⚠️ No data for ${areaName} Android`);
+            console.warn(`⚠️ No data for Android ${area.name}`);
             return;
         }
         
-        const metrics = calculateXmRMetrics(androidAreaData.actualOrders);
-        const anomalies = detectAnomalies(androidAreaData.actualOrders, metrics);
+        // Update Weekly Scorecard
+        updateChartScorecard(area.prefix, androidAreaData);
         
-        createXChart(canvasIds.canvasId, androidAreaData, metrics, `${areaName} - Android Orders`);
-        createMRChart(canvasIds.mrCanvasId, androidAreaData, metrics);
+        // Update Monthly Scorecard
+        updateChartMTDScorecard(area.prefix, androidAreaData.weeks, androidAreaData.actualOrders);
         
-        console.log(`   ✅ ${areaName} Android charts created`);
+        // Create Weekly Chart
+        createUniversalCleanChart(
+            area.canvasId,
+            androidAreaData.weeks,
+            androidAreaData.actualOrders,
+            androidAreaData.targets,
+            {
+                title: `Android ${area.name} - Weekly Performance`,
+                yAxisLabel: 'Orders',
+                showAverage: true,
+                showLabels: true,
+                labelsCount: 2  // ✅ Only 2 labels
+            }
+        );
+        
+        // Create Monthly Chart
+        createChartMonthlyView(
+            area.monthlyCanvasId,
+            androidAreaData.weeks,
+            androidAreaData.actualOrders,
+            androidAreaData.targets,
+            `Android ${area.name}`
+        );
+        
+        console.log(`   ✅ Android ${area.name} weekly + monthly charts created`);
     });
 }
-
 // ========================================================================
 // NEW FUNCTION: Create Regional Breakdown Charts
 // Shows individual area trends within each region
