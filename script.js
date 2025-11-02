@@ -223,6 +223,217 @@ function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null
         return 0;
     }
 }
+
+
+// ==================== UNIVERSAL CLEAN CHART TEMPLATE ====================
+/**
+ * Creates a clean, modern chart following the National Weekly Chart style
+ * @param {string} canvasId - Canvas element ID
+ * @param {Array} labels - Chart labels (weeks/months)
+ * @param {Array} actualData - Actual values
+ * @param {Array} targetData - Target values (optional)
+ * @param {Object} options - Chart configuration options
+ */
+function createUniversalCleanChart(canvasId, labels, actualData, targetData = null, options = {}) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.warn(`⚠️ Canvas ${canvasId} not found`);
+        return;
+    }
+    
+    // Destroy existing chart
+    if (canvas.chartInstance) {
+        canvas.chartInstance.destroy();
+    }
+    
+    // Default options
+    const defaults = {
+        title: 'Chart Title',
+        yAxisLabel: 'Values',
+        showAverage: true,
+        showLabels: true,
+        labelsCount: 5, // Show last 5 data points
+        chartType: 'line',
+        height: 400
+    };
+    
+    const config = { ...defaults, ...options };
+    
+    // Calculate average
+    const average = actualData.reduce((sum, val) => sum + val, 0) / actualData.length;
+    
+    // Prepare datasets
+    const datasets = [
+        {
+            label: 'Actual Orders',
+            data: actualData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            pointBackgroundColor: actualData.map((_, idx) => {
+                const total = actualData.length;
+                if (idx >= total - config.labelsCount) return '#3b82f6';
+                return '#cbd5e1';
+            }),
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: actualData.map((_, idx) => {
+                const total = actualData.length;
+                if (idx >= total - config.labelsCount) return 6;
+                return 3;
+            }),
+            pointHoverRadius: 8,
+            tension: 0.3,
+            borderWidth: 2,
+            fill: config.chartType === 'line',
+            order: 1
+        }
+    ];
+    
+    // Add target line if provided
+    if (targetData) {
+        datasets.push({
+            label: 'Target',
+            data: targetData,
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [5, 5],
+            tension: 0.1,
+            fill: false,
+            order: 2
+        });
+    }
+    
+    // Add average line if enabled
+    if (config.showAverage) {
+        datasets.push({
+            label: 'Average',
+            data: Array(labels.length).fill(average),
+            borderColor: '#10b981',
+            backgroundColor: 'transparent',
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [8, 4],
+            tension: 0,
+            fill: false,
+            order: 3
+        });
+    }
+    
+    // Create chart
+    const chart = new Chart(canvas, {
+        type: config.chartType,
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 12,
+                        font: { size: 11 },
+                        color: '#374151'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#1e293b',
+                    bodyColor: '#374151',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 12
+                },
+                datalabels: {
+                    display: function(context) {
+                        if (!config.showLabels) return false;
+                        const idx = context.dataIndex;
+                        const total = context.dataset.data.length;
+                        return idx >= total - config.labelsCount && context.datasetIndex === 0;
+                    },
+                    align: 'top',
+                    offset: 8,
+                    font: function(context) {
+                        const idx = context.dataIndex;
+                        const total = context.dataset.data.length;
+                        if (idx === total - 1) {
+                            return { size: 11, weight: 'bold' };
+                        }
+                        return { size: 10, weight: '600' };
+                    },
+                    color: function(context) {
+                        const idx = context.dataIndex;
+                        const total = context.dataset.data.length;
+                        if (idx === total - 1) return '#3b82f6';
+                        return '#64748b';
+                    },
+                    formatter: function(value, context) {
+                        const idx = context.dataIndex;
+                        const total = context.dataset.data.length;
+                        if (idx === total - 1) {
+                            return `CURRENT: ${value.toLocaleString()}`;
+                        }
+                        return value.toLocaleString();
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: config.yAxisLabel,
+                        font: { size: 12, weight: '600' },
+                        color: '#374151'
+                    },
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#64748b',
+                        callback: v => v.toLocaleString()
+                    },
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    border: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: { size: 9 },
+                        color: '#64748b',
+                        maxTicksLimit: 12,
+                        autoSkip: true
+                    },
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+    canvas.chartInstance = chart;
+    console.log(`✅ Created clean chart: ${canvasId}`);
+    
+    return chart;
+}
+
 // ==================== REAL NATIONAL WEEKLY CHART FUNCTION ====================
 
 async function createRealNationalWeeklyChart() {
@@ -1001,37 +1212,44 @@ function createMRChart(canvasId, data, metrics) {
 }
 
 // ==================== REGIONAL CHARTS ====================
-
-// Create Regional XmR Charts
+// Create Regional Clean Charts
 async function createRegionalXmRCharts() {
-    console.log('📊 Creating Regional XmR Charts...');
+    console.log('📊 Creating Regional Clean Charts...');
     
     if (!window.weeklyData || !window.weeklyData.regions) {
         console.error('❌ Regional data not available');
         return;
     }
     
-    const regions = {
-        'EAST REGION': { canvasId: 'eastRegionChart', mrCanvasId: 'eastRegionMRChart' },
-        'JAVA REGION': { canvasId: 'javaRegionChart', mrCanvasId: 'javaRegionMRChart' },
-        'SUMATERA REGION': { canvasId: 'sumateraRegionChart', mrCanvasId: 'sumateraRegionMRChart' }
-    };
+    const regions = [
+        { name: 'EAST REGION', canvasId: 'eastRegionChart' },
+        { name: 'JAVA REGION', canvasId: 'javaRegionChart' },
+        { name: 'SUMATERA REGION', canvasId: 'sumateraRegionChart' }
+    ];
     
-    Object.entries(regions).forEach(([regionName, canvasIds]) => {
-        const regionalData = window.weeklyData.regions[regionName];
+    regions.forEach(region => {
+        const regionalData = window.weeklyData.regions[region.name];
         
         if (!regionalData) {
-            console.warn(`⚠️ No data for ${regionName}`);
+            console.warn(`⚠️ No data for ${region.name}`);
             return;
         }
         
-        const metrics = calculateXmRMetrics(regionalData.actualOrders);
-        const anomalies = detectAnomalies(regionalData.actualOrders, metrics);
+        createUniversalCleanChart(
+            region.canvasId,
+            regionalData.weeks,
+            regionalData.actualOrders,
+            regionalData.targets,
+            {
+                title: `${region.name} - Total Orders`,
+                yAxisLabel: 'Orders',
+                showAverage: true,
+                showLabels: true,
+                labelsCount: 5
+            }
+        );
         
-        createXChart(canvasIds.canvasId, regionalData, metrics, `${regionName} - Total Orders`);
-        createMRChart(canvasIds.mrCanvasId, regionalData, metrics);
-        
-        console.log(`   ✅ ${regionName} charts created`);
+        console.log(`   ✅ ${region.name} chart created`);
     });
 }
 
