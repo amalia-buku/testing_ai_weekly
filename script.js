@@ -4403,7 +4403,19 @@ function createAllIndividualVariableCharts() {
         console.error('❌ Error creating individual variable charts:', error);
     }
 }
-
+// Area names and their prefixes
+const areasList = [
+    { name: 'BALI NUSRA', prefix: 'baliNusra', id: 'bali-nusra' },
+    { name: 'JAKARTA', prefix: 'jakarta', id: 'jakarta' },
+    { name: 'JAVA 1', prefix: 'java1', id: 'java1' },
+    { name: 'JAVA 2', prefix: 'java2', id: 'java2' },
+    { name: 'JAVA 3', prefix: 'java3', id: 'java3' },
+    { name: 'KALIMANTAN', prefix: 'kalimantan', id: 'kalimantan' },
+    { name: 'SULAWESI', prefix: 'sulawesi', id: 'sulawesi' },
+    { name: 'SUMATERA 1', prefix: 'sumatera1', id: 'sumatera1' },
+    { name: 'SUMATERA 2', prefix: 'sumatera2', id: 'sumatera2' },
+    { name: 'SUMATERA 3', prefix: 'sumatera3', id: 'sumatera3' }
+];
 // Create XmR Charts for Northstar Metric with Professional Design
 function createProfessionalXmRCharts() {
     console.log('🚀 Creating Northstar XmR charts with professional design...');
