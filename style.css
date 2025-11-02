@@ -935,3 +935,24 @@ html {
         margin-right: 12px;
     }
 }
+/* Hide mR Chart containers - using unified charts now */
+div.chart-container:has(canvas[id$="MRChart"]) {
+    display: none !important;
+}
+
+canvas[id$="MRChart"] {
+    display: none !important;
+}
+
+.chart-container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    height: auto !important;
+}
