@@ -4228,6 +4228,69 @@ function enhanceNavigationElements() {
         console.error('❌ Error enhancing navigation elements:', error);
     }
 }
+// ==================== UPDATE SCORECARDS FOR CHARTS ====================
+function updateChartScorecard(prefix, data) {
+    const totalWeeks = data.actualOrders.length;
+    const currentValue = data.actualOrders[totalWeeks - 1];
+    const previousValue = data.actualOrders[totalWeeks - 2];
+    const currentLabel = data.weeks[totalWeeks - 1];
+    const previousLabel = data.weeks[totalWeeks - 2];
+    
+    const growth = previousValue ? (((currentValue - previousValue) / previousValue) * 100) : 0;
+    
+    // Update Previous Week
+    const prevValueEl = document.getElementById(`${prefix}PreviousValue`);
+    if (prevValueEl) prevValueEl.textContent = previousValue.toLocaleString();
+    
+    const prevLabelEl = document.getElementById(`${prefix}PreviousLabel`);
+    if (prevLabelEl) prevLabelEl.textContent = previousLabel;
+    
+    // Update Current Week
+    const currValueEl = document.getElementById(`${prefix}CurrentValue`);
+    if (currValueEl) currValueEl.textContent = currentValue.toLocaleString();
+    
+    const currLabelEl = document.getElementById(`${prefix}CurrentLabel`);
+    if (currLabelEl) currLabelEl.textContent = currentLabel;
+    
+    // Update Growth
+    const growthValueEl = document.getElementById(`${prefix}GrowthValue`);
+    if (growthValueEl) {
+        growthValueEl.textContent = `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+        growthValueEl.style.color = growth >= 0 ? '#10b981' : '#ef4444';
+    }
+    
+    const growthLabelEl = document.getElementById(`${prefix}GrowthLabel`);
+    if (growthLabelEl) growthLabelEl.textContent = 'Week over Week';
+}
+
+// ==================== UPDATE MTD SUMMARY FOR CHARTS ====================
+function updateChartMTD(prefix, weeks, actualOrders) {
+    const monthlyData = aggregateMonthlyData(weeks, actualOrders, []);
+    const currentMonth = monthlyData[monthlyData.length - 1];
+    const previousMonth = monthlyData[monthlyData.length - 2];
+    
+    // Current MTD
+    const currMTDEl = document.getElementById(`${prefix}CurrentMTD`);
+    if (currMTDEl) currMTDEl.textContent = currentMonth.actual.toLocaleString();
+    
+    // Previous MTD
+    const prevMTDEl = document.getElementById(`${prefix}PreviousMTD`);
+    if (prevMTDEl) prevMTDEl.textContent = previousMonth.actual.toLocaleString();
+    
+    // Achievement (MTD vs Previous)
+    const achievement = ((currentMonth.actual / previousMonth.actual) * 100);
+    const achievementEl = document.getElementById(`${prefix}Achievement`);
+    if (achievementEl) {
+        achievementEl.textContent = `${achievement.toFixed(1)}%`;
+        if (achievement >= 100) {
+            achievementEl.style.color = '#10b981';
+        } else if (achievement >= 90) {
+            achievementEl.style.color = '#f59e0b';
+        } else {
+            achievementEl.style.color = '#ef4444';
+        }
+    }
+}
 
 
 // // ==================== TEST FUNCTION: NATIONAL CHART WITH DYNAMIC DATA ====================
