@@ -1029,3 +1029,24 @@ canvas[id$="MRChart"] {
         grid-template-columns: 1fr !important;
     }
 }
+/* Hide all mR Chart containers - we only use single unified charts now */
+.chart-container:has(canvas[id*="MRChart"]),
+.chart-container:has(canvas[id$="MRChart"]) {
+    display: none !important;
+}
+
+canvas[id*="MRChart"],
+canvas[id$="MRChart"] {
+    display: none !important;
+}
+
+/* Hide charts-row that contains mR charts */
+.charts-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 24px;
+}
+
+.charts-row .chart-container:last-child {
+    display: none !important;
+}
