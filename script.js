@@ -228,8 +228,9 @@ function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null
 // Find and replace the entire createRealNationalWeeklyChart function
 async function createRealNationalWeeklyChart() {
     try {
-        console.log('📊 CREATING WEEKLY CHART WITH 8 DATA LABELS...');
+        console.log('📊 Creating Weekly Performance Chart...');
         
+        // Load data if not already loaded
         if (!window.weeklyData) {
             console.log('⏳ Loading weekly data...');
             window.weeklyData = await buildWeeklyDataFromRaw();
@@ -239,42 +240,52 @@ async function createRealNationalWeeklyChart() {
             throw new Error('Weekly data not available');
         }
         
-        const nationalData = window.weeklyData.national['ALL PRODUCT']; 
+        const nationalData = window.weeklyData.national['ALL PRODUCT'];
         console.log(`✅ Using ${nationalData.weeks.length} weeks of data`);
         
+        // Calculate metrics
         const metrics = calculateXmRMetrics(nationalData.actualOrders);
         const averageLine = metrics.centerLineX;
         const anomalies = detectAnomalies(nationalData.actualOrders, metrics);
         
-        // Find highest and lowest
+        console.log('📈 Average Line:', averageLine);
+        
+        // Find highest and lowest points
         const maxValue = Math.max(...nationalData.actualOrders);
         const minValue = Math.min(...nationalData.actualOrders);
         const maxIndex = nationalData.actualOrders.indexOf(maxValue);
         const minIndex = nationalData.actualOrders.indexOf(minValue);
         
-        // Get current week + 4 previous weeks indices
+        console.log('📊 Max:', maxValue, 'at index', maxIndex);
+        console.log('📊 Min:', minValue, 'at index', minIndex);
+        
+        // Determine which points to label (8 labels total)
         const currentIndex = nationalData.actualOrders.length - 1;
         const labelIndices = new Set([
-            currentIndex,
-            currentIndex - 1,
-            currentIndex - 2,
-            currentIndex - 3,
-            currentIndex - 4,
-            maxIndex,
-            minIndex
+            currentIndex,      // Current week
+            currentIndex - 1,  // Week -1
+            currentIndex - 2,  // Week -2
+            currentIndex - 3,  // Week -3
+            currentIndex - 4,  // Week -4
+            maxIndex,          // Highest
+            minIndex           // Lowest
         ]);
         
+        console.log('🏷️ Label indices:', Array.from(labelIndices));
+        
+        // Get canvas
         const canvas = document.getElementById('nationalWeeklyChart');
         if (!canvas) {
             console.error('❌ Canvas #nationalWeeklyChart not found!');
             return;
         }
         
+        // Destroy existing chart
         if (canvas.chartInstance) {
             canvas.chartInstance.destroy();
         }
         
-        // Create chart
+        // Create the chart
         const chart = new Chart(canvas, {
             type: 'line',
             data: {
@@ -286,34 +297,30 @@ async function createRealNationalWeeklyChart() {
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         pointBackgroundColor: nationalData.actualOrders.map((_, idx) => {
-                            if (idx === maxIndex) return '#10b981';
-                            if (idx === minIndex) return '#ef4444';
-                            return '#3b82f6';
+                            if (idx === maxIndex) return '#10b981'; // Green for highest
+                            if (idx === minIndex) return '#ef4444'; // Red for lowest
+                            return '#3b82f6'; // Blue for normal
                         }),
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
                         pointRadius: nationalData.actualOrders.map((_, idx) => 
-                            labelIndices.has(idx) ? 7 : 4
+                            labelIndices.has(idx) ? 6 : 4
                         ),
-                        pointHoverRadius: 9,
+                        pointHoverRadius: 8,
                         tension: 0.3,
-                        borderWidth: 3,
+                        borderWidth: 2,
                         fill: true,
                         order: 1
                     },
                     {
                         label: 'Target',
                         data: nationalData.targets,
-                        borderColor: '#f97316',
+                        borderColor: '#f59e0b',
                         backgroundColor: 'transparent',
-                        pointBackgroundColor: '#f97316',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 1,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        tension: 0.1,
+                        pointRadius: 0,
                         borderWidth: 2,
-                        borderDash: [2, 4],
+                        borderDash: [5, 5],
+                        tension: 0.1,
                         fill: false,
                         order: 2
                     },
@@ -323,9 +330,9 @@ async function createRealNationalWeeklyChart() {
                         borderColor: '#10b981',
                         backgroundColor: 'transparent',
                         pointRadius: 0,
-                        tension: 0,
                         borderWidth: 2,
                         borderDash: [8, 4],
+                        tension: 0,
                         fill: false,
                         order: 3
                     }
@@ -353,26 +360,15 @@ async function createRealNationalWeeklyChart() {
                         }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         titleColor: '#1e293b',
                         bodyColor: '#374151',
                         borderColor: '#e2e8f0',
-                        borderWidth: 2,
+                        borderWidth: 1,
                         padding: 12,
                         callbacks: {
                             label: function(context) {
                                 return `${context.dataset.label}: ${context.parsed.y.toLocaleString()}`;
-                            },
-                            afterBody: function(tooltipItems) {
-                                const idx = tooltipItems[0].dataIndex;
-                                const actual = nationalData.actualOrders[idx];
-                                const target = nationalData.targets[idx];
-                                const achievement = ((actual / target) * 100).toFixed(1);
-                                return [
-                                    '',
-                                    `Achievement: ${achievement}%`,
-                                    `Average: ${averageLine.toLocaleString()}`
-                                ];
                             }
                         }
                     },
@@ -386,43 +382,32 @@ async function createRealNationalWeeklyChart() {
                         offset: 8,
                         font: function(context) {
                             const idx = context.dataIndex;
-                            if (idx === currentIndex || idx === maxIndex || idx === minIndex) {
-                                return { size: 12, weight: 'bold' };
+                            if (idx === maxIndex || idx === minIndex) {
+                                return { size: 11, weight: 'bold' };
                             }
-                            return { size: 11, weight: '600' };
+                            return { size: 10, weight: '600' };
                         },
                         color: function(context) {
                             const idx = context.dataIndex;
                             if (idx === maxIndex) return '#10b981';
                             if (idx === minIndex) return '#ef4444';
-                            return '#333333';
+                            return '#1e293b';
                         },
-                        formatter: function(value, context) {
-                            const idx = context.dataIndex;
-                            if (idx === currentIndex) return `CURRENT: ${value.toLocaleString()}`;
-                            if (idx === currentIndex - 1) return `WEEK-1: ${value.toLocaleString()}`;
-                            if (idx === currentIndex - 2) return `WEEK-2: ${value.toLocaleString()}`;
-                            if (idx === currentIndex - 3) return `WEEK-3: ${value.toLocaleString()}`;
-                            if (idx === currentIndex - 4) return `WEEK-4: ${value.toLocaleString()}`;
-                            if (idx === maxIndex) return `HIGHEST: ${value.toLocaleString()}`;
-                            if (idx === minIndex) return `LOWEST: ${value.toLocaleString()}`;
-                            return null;
+                        formatter: function(value) {
+                            return value.toLocaleString();
                         }
                     }
                 },
                 scales: {
                     y: {
-                        title: {
-                            display: true,
-                            text: 'Total Orders',
-                            font: { size: 13, weight: '600' },
-                            color: '#374151'
-                        },
                         beginAtZero: false,
+                        title: {
+                            display: false
+                        },
                         ticks: {
                             font: { size: 10 },
                             color: '#64748b',
-                            callback: value => value.toLocaleString()
+                            callback: v => v.toLocaleString()
                         },
                         grid: {
                             color: 'rgba(148, 163, 184, 0.1)'
@@ -430,10 +415,7 @@ async function createRealNationalWeeklyChart() {
                     },
                     x: {
                         title: {
-                            display: true,
-                            text: 'Week',
-                            font: { size: 13, weight: '600' },
-                            color: '#374151'
+                            display: false
                         },
                         ticks: {
                             maxRotation: 45,
@@ -443,7 +425,7 @@ async function createRealNationalWeeklyChart() {
                             maxTicksLimit: 15
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.05)'
+                            display: false
                         }
                     }
                 }
@@ -452,14 +434,184 @@ async function createRealNationalWeeklyChart() {
         });
         
         canvas.chartInstance = chart;
-        console.log('✅ Weekly chart created!');
+        console.log('✅ Weekly chart created successfully');
         
+        // Update metrics
         updatePageMetrics(nationalData, metrics, anomalies);
+        
+        // Create monthly chart
         createMonthlyChart(nationalData.weeks, nationalData.actualOrders, nationalData.targets);
         
     } catch (error) {
         console.error('❌ Error creating weekly chart:', error);
+        console.error('Error details:', error.stack);
     }
+}
+
+function createMonthlyChart(weeks, actualOrders, targets) {
+    try {
+        console.log('📊 Creating Monthly Chart...');
+        
+        // Aggregate data by month
+        const monthlyData = aggregateMonthlyData(weeks, actualOrders, targets);
+        console.log('📅 Monthly data aggregated:', monthlyData.length, 'months');
+        
+        // Get last 7 months
+        const last7Months = monthlyData.slice(-7);
+        console.log('📅 Showing last 7 months:', last7Months.map(m => m.label));
+        
+        const canvas = document.getElementById('monthlyChart');
+        if (!canvas) {
+            console.error('❌ Canvas #monthlyChart not found!');
+            return;
+        }
+        
+        // Destroy existing chart
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
+        
+        // Create the chart
+        const chart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: last7Months.map(m => m.label),
+                datasets: [
+                    {
+                        label: 'Actual',
+                        data: last7Months.map(m => m.actual),
+                        backgroundColor: '#3b82f6',
+                        barThickness: 35,
+                        order: 1
+                    },
+                    {
+                        label: 'Target',
+                        data: last7Months.map(m => m.target),
+                        backgroundColor: '#f59e0b',
+                        barThickness: 35,
+                        order: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 10,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#374151',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        callbacks: {
+                            afterBody: function(tooltipItems) {
+                                const idx = tooltipItems[0].dataIndex;
+                                const month = last7Months[idx];
+                                const achievement = ((month.actual / month.target) * 100).toFixed(1);
+                                return [`Achievement: ${achievement}%`];
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return context.datasetIndex === 0; // Only show on Actual bars
+                        },
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 4,
+                        font: { size: 10, weight: 'bold' },
+                        color: '#1e293b',
+                        formatter: function(value, context) {
+                            const month = last7Months[context.dataIndex];
+                            const achievement = ((month.actual / month.target) * 100).toFixed(1);
+                            return `${achievement}%`;
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 10 },
+                            callback: v => v.toLocaleString()
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 10 }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+        
+        canvas.chartInstance = chart;
+        console.log('✅ Monthly chart created successfully');
+        
+    } catch (error) {
+        console.error('❌ Error creating monthly chart:', error);
+        console.error('Error details:', error.stack);
+    }
+}
+function aggregateMonthlyData(weeks, actualOrders, targets) {
+    const monthlyMap = new Map();
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    weeks.forEach((week, index) => {
+        const weekDate = new Date(week);
+        const month = weekDate.getMonth();
+        const year = weekDate.getFullYear();
+        const key = `${year}-${String(month).padStart(2, '0')}`;
+        
+        if (!monthlyMap.has(key)) {
+            monthlyMap.set(key, {
+                actual: 0,
+                target: 0,
+                month: month,
+                year: year,
+                label: `${monthNames[month]}-${String(year).slice(2)}`,
+                isPartial: false
+            });
+        }
+        
+        const monthData = monthlyMap.get(key);
+        monthData.actual += actualOrders[index];
+        monthData.target += targets[index];
+        
+        // Mark current month as partial (MTD)
+        if (month === currentMonth && year === currentYear) {
+            monthData.isPartial = true;
+        }
+    });
+    
+    // Convert to array and sort by date
+    const result = Array.from(monthlyMap.values()).sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month;
+    });
+    
+    return result;
 }
 // Add this function for the monthly chart
 function createMonthlyChart(weeks, actualOrders, targets) {
@@ -1187,110 +1339,116 @@ async function createRegionalBreakdownCharts() {
     console.log('✅ All regional breakdown charts created successfully!');
 }
 
-// Find and replace the updatePageMetrics function
 function updatePageMetrics(nationalData, metrics, anomalies) {
     try {
         const weeks = nationalData.weeks;
         const actualOrders = nationalData.actualOrders;
+        const targets = nationalData.targets;
         
-        // Get current week and previous week data
-        const currentWeekValue = actualOrders[actualOrders.length - 1];
-        const previousWeekValue = actualOrders[actualOrders.length - 2];
+        console.log('📊 Updating page metrics...');
         
-        // Calculate WoW growth percentage
-        const wowGrowth = previousWeekValue ? (((currentWeekValue - previousWeekValue) / previousWeekValue) * 100) : 0;
-        const wowFormatted = wowGrowth >= 0 ? `+${wowGrowth.toFixed(1)}%` : `${wowGrowth.toFixed(1)}%`;
+        // ========== WEEKLY METRICS ==========
+        const currentWeek = actualOrders[actualOrders.length - 1];
+        const previousWeek = actualOrders[actualOrders.length - 2];
+        const wowGrowth = previousWeek ? (((currentWeek - previousWeek) / previousWeek) * 100) : 0;
         
-        // Update Current Week
-        const currentWeekElement = document.getElementById('currentWeek');
-        if (currentWeekElement) {
-            currentWeekElement.textContent = currentWeekValue.toLocaleString();
+        // Update Weekly Previous Week
+        const weeklyPrevEl = document.getElementById('weeklyPreviousWeek');
+        if (weeklyPrevEl) {
+            weeklyPrevEl.textContent = previousWeek.toLocaleString();
         }
         
-        const currentWeekDateElement = document.getElementById('currentWeekDate');
-        if (currentWeekDateElement && weeks.length > 0) {
-            currentWeekDateElement.textContent = `(${weeks[weeks.length - 1]})`;
+        // Update Weekly Growth %
+        const weeklyGrowthEl = document.getElementById('weeklyGrowth');
+        if (weeklyGrowthEl) {
+            weeklyGrowthEl.textContent = `${wowGrowth >= 0 ? '+' : ''}${wowGrowth.toFixed(1)}%`;
+            weeklyGrowthEl.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
         }
         
-        // Update Previous Week
-        const previousWeekElement = document.getElementById('previousWeek');
-        if (previousWeekElement) {
-            previousWeekElement.textContent = previousWeekValue.toLocaleString();
+        // Update Weekly Current Week
+        const weeklyCurrentEl = document.getElementById('weeklyCurrent');
+        if (weeklyCurrentEl) {
+            weeklyCurrentEl.textContent = currentWeek.toLocaleString();
         }
         
-        const previousWeekDateElement = document.getElementById('previousWeekDate');
-        if (previousWeekDateElement && weeks.length > 1) {
-            previousWeekDateElement.textContent = `(${weeks[weeks.length - 2]})`;
+        // Update Weekly Previous Week (duplicate for 4th card)
+        const weeklyPrev2El = document.getElementById('weeklyPrevious2');
+        if (weeklyPrev2El) {
+            weeklyPrev2El.textContent = previousWeek.toLocaleString();
         }
         
-        // Update WoW Growth %
-        const wowGrowthElement = document.getElementById('wowGrowth');
-        if (wowGrowthElement) {
-            wowGrowthElement.textContent = wowFormatted;
-            wowGrowthElement.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
+        // ========== MONTHLY METRICS ==========
+        const monthlyData = calculateMonthlyMetrics(weeks, actualOrders, targets);
+        
+        // Calculate MoM Growth
+        const momGrowth = monthlyData.previousMonthTotal ? 
+            (((monthlyData.currentMonthMTD - monthlyData.previousMonthTotal) / monthlyData.previousMonthTotal) * 100) : 0;
+        
+        // Update Weekly MoM Growth %
+        const weeklyMoMEl = document.getElementById('weeklyMoMGrowth');
+        if (weeklyMoMEl) {
+            weeklyMoMEl.textContent = `${momGrowth >= 0 ? '+' : ''}${momGrowth.toFixed(1)}%`;
+            weeklyMoMEl.style.color = momGrowth >= 0 ? '#10b981' : '#ef4444';
         }
         
-        const wowTrendElement = document.getElementById('wowTrend');
-        if (wowTrendElement) {
-            wowTrendElement.textContent = wowGrowth > 0 ? '⬆️ Increase' : wowGrowth < 0 ? '⬇️ Decrease' : '➡️ No Change';
-            wowTrendElement.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
+        // Update Monthly Current Month MTD
+        const currentMonthEl = document.getElementById('currentMonthValue');
+        if (currentMonthEl) {
+            currentMonthEl.textContent = monthlyData.currentMonthMTD.toLocaleString();
         }
         
-        // Calculate Monthly Metrics
-        const monthlyData = calculateMonthlyMetrics(weeks, actualOrders);
-        
-        // Update Current Month MTD
-        const currentMonthMTDElement = document.getElementById('currentMonthMTD');
-        if (currentMonthMTDElement) {
-            currentMonthMTDElement.textContent = monthlyData.currentMonthMTD.toLocaleString();
+        const currentMonthLabelEl = document.getElementById('currentMonthLabel');
+        if (currentMonthLabelEl) {
+            currentMonthLabelEl.textContent = `(${monthlyData.currentMonthName})`;
         }
         
-        const currentMonthNameElement = document.getElementById('currentMonthName');
-        if (currentMonthNameElement) {
-            currentMonthNameElement.textContent = `(${monthlyData.currentMonthName})`;
+        // Update Monthly Previous Month (Full Month)
+        const previousMonthEl = document.getElementById('previousMonthValue');
+        if (previousMonthEl) {
+            previousMonthEl.textContent = monthlyData.previousMonthTotal.toLocaleString();
         }
         
-        // Update Previous Month MTD
-        const previousMonthMTDElement = document.getElementById('previousMonthMTD');
-        if (previousMonthMTDElement) {
-            previousMonthMTDElement.textContent = monthlyData.previousMonthMTD.toLocaleString();
+        const previousMonthLabelEl = document.getElementById('previousMonthLabel');
+        if (previousMonthLabelEl) {
+            previousMonthLabelEl.textContent = `(${monthlyData.previousMonthName})`;
         }
         
-        const previousMonthNameElement = document.getElementById('previousMonthName');
-        if (previousMonthNameElement) {
-            previousMonthNameElement.textContent = `(${monthlyData.previousMonthName})`;
-        }
+        // Calculate Achievement %
+        const achievement = monthlyData.currentMonthTarget > 0 ? 
+            ((monthlyData.currentMonthMTD / monthlyData.currentMonthTarget) * 100) : 0;
         
-        // Calculate MoM growth
-        const momGrowth = monthlyData.previousMonthMTD ? (((monthlyData.currentMonthMTD - monthlyData.previousMonthMTD) / monthlyData.previousMonthMTD) * 100) : 0;
-        const momFormatted = momGrowth >= 0 ? `+${momGrowth.toFixed(1)}%` : `${momGrowth.toFixed(1)}%`;
-        
-        // Update MoM Growth %
-        const momGrowthElement = document.getElementById('momGrowth');
-        if (momGrowthElement) {
-            momGrowthElement.textContent = momFormatted;
-            momGrowthElement.style.color = momGrowth >= 0 ? '#10b981' : '#ef4444';
-        }
-        
-        const momTrendElement = document.getElementById('momTrend');
-        if (momTrendElement) {
-            momTrendElement.textContent = momGrowth > 0 ? '⬆️ Increase' : momGrowth < 0 ? '⬇️ Decrease' : '➡️ No Change';
-            momTrendElement.style.color = momGrowth >= 0 ? '#10b981' : '#ef4444';
+        const achievementEl = document.getElementById('achievementPercent');
+        if (achievementEl) {
+            achievementEl.textContent = `${achievement.toFixed(1)}%`;
+            if (achievement >= 100) {
+                achievementEl.style.color = '#10b981'; // Green
+            } else if (achievement >= 90) {
+                achievementEl.style.color = '#f59e0b'; // Orange
+            } else {
+                achievementEl.style.color = '#ef4444'; // Red
+            }
         }
         
         console.log('✅ Page metrics updated successfully');
+        console.log('Weekly:', { currentWeek, previousWeek, wowGrowth: wowGrowth.toFixed(1) + '%' });
+        console.log('Monthly:', { 
+            currentMTD: monthlyData.currentMonthMTD, 
+            previousTotal: monthlyData.previousMonthTotal, 
+            achievement: achievement.toFixed(1) + '%' 
+        });
+        
     } catch (error) {
         console.error('❌ Error updating page metrics:', error);
     }
 }
 
-// Add this new function if it doesn't exist
-function calculateMonthlyMetrics(weeks, actualOrders) {
+function calculateMonthlyMetrics(weeks, actualOrders, targets) {
     try {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         
+        // Calculate previous month
         const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
         const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
         
@@ -1298,86 +1456,58 @@ function calculateMonthlyMetrics(weeks, actualOrders) {
                           'July', 'August', 'September', 'October', 'November', 'December'];
         
         let currentMonthMTD = 0;
-        let previousMonthMTD = 0;
+        let currentMonthTarget = 0;
+        let previousMonthTotal = 0;
+        let previousMonthTarget = 0;
         
+        // Loop through all weeks
         weeks.forEach((week, index) => {
             const weekDate = new Date(week);
-            if (weekDate.getMonth() === currentMonth && weekDate.getFullYear() === currentYear) {
+            const weekMonth = weekDate.getMonth();
+            const weekYear = weekDate.getFullYear();
+            
+            // Current month MTD
+            if (weekMonth === currentMonth && weekYear === currentYear) {
                 currentMonthMTD += actualOrders[index];
+                currentMonthTarget += targets[index];
             }
-            if (weekDate.getMonth() === previousMonth && weekDate.getFullYear() === previousYear) {
-                previousMonthMTD += actualOrders[index];
+            
+            // Previous month FULL MONTH
+            if (weekMonth === previousMonth && weekYear === previousYear) {
+                previousMonthTotal += actualOrders[index];
+                previousMonthTarget += targets[index];
             }
         });
         
+        console.log('📅 Monthly Calculations:', {
+            currentMonth: monthNames[currentMonth],
+            currentMTD: currentMonthMTD,
+            currentTarget: currentMonthTarget,
+            previousMonth: monthNames[previousMonth],
+            previousTotal: previousMonthTotal
+        });
+        
         return {
-            currentMonthMTD: currentMonthMTD,
-            previousMonthMTD: previousMonthMTD,
+            currentMonthMTD,
+            currentMonthTarget,
+            previousMonthTotal,
+            previousMonthTarget,
             currentMonthName: `${monthNames[currentMonth]} ${currentYear}`,
             previousMonthName: `${monthNames[previousMonth]} ${previousYear}`
         };
+        
     } catch (error) {
-        console.error('Error calculating monthly metrics:', error);
+        console.error('❌ Error calculating monthly metrics:', error);
         return {
             currentMonthMTD: 0,
-            previousMonthMTD: 0,
+            currentMonthTarget: 0,
+            previousMonthTotal: 0,
+            previousMonthTarget: 0,
             currentMonthName: '-',
             previousMonthName: '-'
         };
     }
 }
-// Calculate XmR control metrics
-function calculateXmRMetrics(data) {
-    // Calculate X-bar (mean)
-    const mean = data.reduce((sum, val) => sum + val, 0) / data.length;
-    
-    // Calculate moving ranges
-    const mR = [];
-    for (let i = 1; i < data.length; i++) {
-        mR.push(Math.abs(data[i] - data[i - 1]));
-    }
-    
-    // Calculate average moving range (mR-bar)
-    const mRBar = mR.reduce((sum, val) => sum + val, 0) / mR.length;
-    
-    // Calculate control limits using d2 constant (1.128 for n=2)
-    const d2 = 1.128;
-    const upperLimit = mean + (2.66 * mRBar);
-    const lowerLimit = Math.max(0, mean - (2.66 * mRBar));
-    
-    return {
-        centerLine: Math.round(mean),
-        upperLimit: Math.round(upperLimit),
-        lowerLimit: Math.round(lowerLimit),
-        mRBar: Math.round(mRBar)
-    };
-}
-
-// Detect anomalies
-function detectAnomalies(data, metrics) {
-    const anomalies = [];
-    
-    data.forEach((value, index) => {
-        if (value > metrics.upperNaturalProcessLimit) {
-            anomalies.push({
-                index: index,
-                type: 'increase',
-                value: value,
-                message: `Point outside control limits: ${value} at index ${index}`
-            });
-        } else if (value < metrics.lowerNaturalProcessLimit) {
-            anomalies.push({
-                index: index,
-                type: 'decrease',
-                value: value,
-                message: `Point outside control limits: ${value} at index ${index}`
-            });
-        }
-    });
-    
-    return anomalies;
-}
-
 
 
 
