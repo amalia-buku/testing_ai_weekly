@@ -1105,7 +1105,129 @@ function createXChart(canvasId, data, metrics, title) {
     
     canvas.chartInstance = chart;
 }
-
+// ==================== CREATE MONTHLY CHART FOR SPECIFIC CHART ====================
+function createChartMonthlyView(canvasId, weeks, actualOrders, targets, chartName) {
+    try {
+        console.log(`📊 Creating monthly chart for ${chartName}...`);
+        
+        const monthlyData = aggregateMonthlyData(weeks, actualOrders, targets);
+        const last6Months = monthlyData.slice(-6);
+        
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.warn(`⚠️ Canvas ${canvasId} not found`);
+            return;
+        }
+        
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
+        
+        const chart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: last6Months.map(m => m.label),
+                datasets: [
+                    {
+                        label: 'Actual',
+                        data: last6Months.map(m => m.actual),
+                        backgroundColor: '#3b82f6',
+                        barThickness: 30
+                    },
+                    {
+                        label: 'Target',
+                        data: last6Months.map(m => m.target),
+                        backgroundColor: '#f59e0b',
+                        barThickness: 30
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 8,
+                            font: { size: 10 },
+                            boxWidth: 10,
+                            boxHeight: 10
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#374151',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 10,
+                        titleFont: { size: 11 },
+                        bodyFont: { size: 10 },
+                        callbacks: {
+                            afterBody: function(tooltipItems) {
+                                const idx = tooltipItems[0].dataIndex;
+                                const month = last6Months[idx];
+                                const achievement = ((month.actual / month.target) * 100).toFixed(1);
+                                return [`Achievement: ${achievement}%`];
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            const idx = context.dataIndex;
+                            const totalMonths = context.chart.data.labels.length;
+                            return idx >= totalMonths - 5 && context.datasetIndex === 0;
+                        },
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 2,
+                        font: { size: 10, weight: 'bold' },
+                        color: function(context) {
+                            const idx = context.dataIndex;
+                            const totalMonths = context.chart.data.labels.length;
+                            if (idx === totalMonths - 1) return '#1e293b';
+                            return '#64748b';
+                        },
+                        formatter: function(value, context) {
+                            const month = last6Months[context.dataIndex];
+                            const achievement = ((month.actual / month.target) * 100).toFixed(0);
+                            const icon = achievement >= 100 ? '✅' : achievement >= 90 ? '🔶' : '❌';
+                            return `${achievement}%${icon}`;
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        border: { display: false },
+                        grid: { display: false, drawBorder: false },
+                        ticks: { display: false }
+                    },
+                    x: {
+                        border: { display: false },
+                        grid: { display: false, drawBorder: false },
+                        ticks: {
+                            font: { size: 9 },
+                            color: '#64748b'
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+        
+        canvas.chartInstance = chart;
+        console.log(`✅ Monthly chart created for ${chartName}`);
+        
+        return chart;
+        
+    } catch (error) {
+        console.error(`❌ Error creating monthly chart for ${chartName}:`, error);
+    }
+}
 // Helper: Create mR Chart (reusable)
 function createMRChart(canvasId, data, metrics) {
     const canvas = document.getElementById(canvasId);
@@ -1212,9 +1334,9 @@ function createMRChart(canvasId, data, metrics) {
 }
 
 // ==================== REGIONAL CHARTS ====================
-// Create Regional Clean Charts with Scorecards
+// Create Regional Clean Charts with Side-by-Side Weekly + Monthly
 async function createRegionalXmRCharts() {
-    console.log('📊 Creating Regional Clean Charts...');
+    console.log('📊 Creating Regional Charts with Weekly + Monthly Views...');
     
     if (!window.weeklyData || !window.weeklyData.regions) {
         console.error('❌ Regional data not available');
@@ -1222,9 +1344,9 @@ async function createRegionalXmRCharts() {
     }
     
     const regions = [
-        { name: 'EAST REGION', canvasId: 'eastRegionChart', prefix: 'eastRegion' },
-        { name: 'JAVA REGION', canvasId: 'javaRegionChart', prefix: 'javaRegion' },
-        { name: 'SUMATERA REGION', canvasId: 'sumateraRegionChart', prefix: 'sumateraRegion' }
+        { name: 'EAST REGION', canvasId: 'eastRegionChart', monthlyCanvasId: 'eastRegionMonthlyChart', prefix: 'eastRegion' },
+        { name: 'JAVA REGION', canvasId: 'javaRegionChart', monthlyCanvasId: 'javaRegionMonthlyChart', prefix: 'javaRegion' },
+        { name: 'SUMATERA REGION', canvasId: 'sumateraRegionChart', monthlyCanvasId: 'sumateraRegionMonthlyChart', prefix: 'sumateraRegion' }
     ];
     
     regions.forEach(region => {
@@ -1235,13 +1357,13 @@ async function createRegionalXmRCharts() {
             return;
         }
         
-        // Update Scorecard
+        // Update Weekly Scorecard
         updateChartScorecard(region.prefix, regionalData);
         
-        // Update MTD
-        updateChartMTD(region.prefix, regionalData.weeks, regionalData.actualOrders);
+        // Update Monthly Scorecard
+        updateChartMTDScorecard(region.prefix, regionalData.weeks, regionalData.actualOrders);
         
-        // Create Chart
+        // Create Weekly Chart
         createUniversalCleanChart(
             region.canvasId,
             regionalData.weeks,
@@ -1256,10 +1378,55 @@ async function createRegionalXmRCharts() {
             }
         );
         
-        console.log(`   ✅ ${region.name} chart created with scorecard`);
+        // Create Monthly Chart
+        createChartMonthlyView(
+            region.monthlyCanvasId,
+            regionalData.weeks,
+            regionalData.actualOrders,
+            regionalData.targets,
+            region.name
+        );
+        
+        console.log(`   ✅ ${region.name} weekly + monthly charts created`);
     });
 }
-
+// ==================== UPDATE MONTHLY SCORECARDS FOR CHARTS ====================
+function updateChartMTDScorecard(prefix, weeks, actualOrders) {
+    const monthlyData = aggregateMonthlyData(weeks, actualOrders, []);
+    
+    if (monthlyData.length < 2) return;
+    
+    const currentMonth = monthlyData[monthlyData.length - 1];
+    const previousMonth = monthlyData[monthlyData.length - 2];
+    
+    // Current Month MTD
+    const currMTDEl = document.getElementById(`${prefix}CurrentMTD`);
+    if (currMTDEl) currMTDEl.textContent = currentMonth.actual.toLocaleString();
+    
+    const currMonthLabelEl = document.getElementById(`${prefix}CurrentMonthLabel`);
+    if (currMonthLabelEl) currMonthLabelEl.textContent = currentMonth.label;
+    
+    // Previous Month MTD
+    const prevMTDEl = document.getElementById(`${prefix}PreviousMTD`);
+    if (prevMTDEl) prevMTDEl.textContent = previousMonth.actual.toLocaleString();
+    
+    const prevMonthLabelEl = document.getElementById(`${prefix}PreviousMonthLabel`);
+    if (prevMonthLabelEl) prevMonthLabelEl.textContent = previousMonth.label;
+    
+    // Achievement (Current vs Previous)
+    const achievement = ((currentMonth.actual / previousMonth.actual) * 100);
+    const achievementEl = document.getElementById(`${prefix}Achievement`);
+    if (achievementEl) {
+        achievementEl.textContent = `${achievement.toFixed(1)}%`;
+        if (achievement >= 100) {
+            achievementEl.style.color = '#10b981';
+        } else if (achievement >= 90) {
+            achievementEl.style.color = '#f59e0b';
+        } else {
+            achievementEl.style.color = '#ef4444';
+        }
+    }
+}
 // ==================== PRODUCT CHARTS ====================
 
 // Create Product XmR Charts
