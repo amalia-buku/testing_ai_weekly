@@ -1212,7 +1212,7 @@ function createMRChart(canvasId, data, metrics) {
 }
 
 // ==================== REGIONAL CHARTS ====================
-// Create Regional Clean Charts
+// Create Regional Clean Charts with Scorecards
 async function createRegionalXmRCharts() {
     console.log('📊 Creating Regional Clean Charts...');
     
@@ -1222,9 +1222,9 @@ async function createRegionalXmRCharts() {
     }
     
     const regions = [
-        { name: 'EAST REGION', canvasId: 'eastRegionChart' },
-        { name: 'JAVA REGION', canvasId: 'javaRegionChart' },
-        { name: 'SUMATERA REGION', canvasId: 'sumateraRegionChart' }
+        { name: 'EAST REGION', canvasId: 'eastRegionChart', prefix: 'eastRegion' },
+        { name: 'JAVA REGION', canvasId: 'javaRegionChart', prefix: 'javaRegion' },
+        { name: 'SUMATERA REGION', canvasId: 'sumateraRegionChart', prefix: 'sumateraRegion' }
     ];
     
     regions.forEach(region => {
@@ -1235,13 +1235,20 @@ async function createRegionalXmRCharts() {
             return;
         }
         
+        // Update Scorecard
+        updateChartScorecard(region.prefix, regionalData);
+        
+        // Update MTD
+        updateChartMTD(region.prefix, regionalData.weeks, regionalData.actualOrders);
+        
+        // Create Chart
         createUniversalCleanChart(
             region.canvasId,
             regionalData.weeks,
             regionalData.actualOrders,
             regionalData.targets,
             {
-                title: `${region.name} - Total Orders`,
+                title: `${region.name} - Weekly Performance`,
                 yAxisLabel: 'Orders',
                 showAverage: true,
                 showLabels: true,
@@ -1249,7 +1256,7 @@ async function createRegionalXmRCharts() {
             }
         );
         
-        console.log(`   ✅ ${region.name} chart created`);
+        console.log(`   ✅ ${region.name} chart created with scorecard`);
     });
 }
 
