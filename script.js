@@ -1350,87 +1350,94 @@ function updatePageMetrics(nationalData, metrics, anomalies) {
         // ========== WEEKLY METRICS ==========
         const currentWeek = actualOrders[actualOrders.length - 1];
         const previousWeek = actualOrders[actualOrders.length - 2];
+        const currentWeekDate = weeks[weeks.length - 1];
+        const previousWeekDate = weeks[weeks.length - 2];
+        
+        // Format week labels (e.g., "25 Dec 2025")
+        const currentWeekLabel = formatWeekLabel(currentWeekDate);
+        const previousWeekLabel = formatWeekLabel(previousWeekDate);
+        
+        // Calculate WoW Growth
         const wowGrowth = previousWeek ? (((currentWeek - previousWeek) / previousWeek) * 100) : 0;
         
         // Update Weekly Previous Week
-        const weeklyPrevEl = document.getElementById('weeklyPreviousWeek');
-        if (weeklyPrevEl) {
-            weeklyPrevEl.textContent = previousWeek.toLocaleString();
+        const weeklyPrevValueEl = document.getElementById('weeklyPreviousValue');
+        if (weeklyPrevValueEl) {
+            weeklyPrevValueEl.textContent = previousWeek.toLocaleString();
         }
         
-        // Update Weekly Growth %
-        const weeklyGrowthEl = document.getElementById('weeklyGrowth');
-        if (weeklyGrowthEl) {
-            weeklyGrowthEl.textContent = `${wowGrowth >= 0 ? '+' : ''}${wowGrowth.toFixed(1)}%`;
-            weeklyGrowthEl.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
+        const weeklyPrevLabelEl = document.getElementById('weeklyPreviousLabel');
+        if (weeklyPrevLabelEl) {
+            weeklyPrevLabelEl.textContent = previousWeekLabel;
         }
         
         // Update Weekly Current Week
-        const weeklyCurrentEl = document.getElementById('weeklyCurrent');
-        if (weeklyCurrentEl) {
-            weeklyCurrentEl.textContent = currentWeek.toLocaleString();
+        const weeklyCurrentValueEl = document.getElementById('weeklyCurrentValue');
+        if (weeklyCurrentValueEl) {
+            weeklyCurrentValueEl.textContent = currentWeek.toLocaleString();
         }
         
-        // Update Weekly Previous Week (duplicate for 4th card)
-        const weeklyPrev2El = document.getElementById('weeklyPrevious2');
-        if (weeklyPrev2El) {
-            weeklyPrev2El.textContent = previousWeek.toLocaleString();
+        const weeklyCurrentLabelEl = document.getElementById('weeklyCurrentLabel');
+        if (weeklyCurrentLabelEl) {
+            weeklyCurrentLabelEl.textContent = currentWeekLabel;
+        }
+        
+        // Update Weekly Growth %
+        const weeklyGrowthValueEl = document.getElementById('weeklyGrowthValue');
+        if (weeklyGrowthValueEl) {
+            weeklyGrowthValueEl.textContent = `${wowGrowth >= 0 ? '+' : ''}${wowGrowth.toFixed(1)}%`;
+            weeklyGrowthValueEl.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
         }
         
         // ========== MONTHLY METRICS ==========
         const monthlyData = calculateMonthlyMetrics(weeks, actualOrders, targets);
         
-        // Calculate MoM Growth
-        const momGrowth = monthlyData.previousMonthTotal ? 
-            (((monthlyData.currentMonthMTD - monthlyData.previousMonthTotal) / monthlyData.previousMonthTotal) * 100) : 0;
-        
-        // Update Weekly MoM Growth %
-        const weeklyMoMEl = document.getElementById('weeklyMoMGrowth');
-        if (weeklyMoMEl) {
-            weeklyMoMEl.textContent = `${momGrowth >= 0 ? '+' : ''}${momGrowth.toFixed(1)}%`;
-            weeklyMoMEl.style.color = momGrowth >= 0 ? '#10b981' : '#ef4444';
-        }
-        
         // Update Monthly Current Month MTD
-        const currentMonthEl = document.getElementById('currentMonthValue');
-        if (currentMonthEl) {
-            currentMonthEl.textContent = monthlyData.currentMonthMTD.toLocaleString();
+        const monthlyCurrentValueEl = document.getElementById('monthlyCurrentValue');
+        if (monthlyCurrentValueEl) {
+            monthlyCurrentValueEl.textContent = monthlyData.currentMonthMTD.toLocaleString();
         }
         
-        const currentMonthLabelEl = document.getElementById('currentMonthLabel');
-        if (currentMonthLabelEl) {
-            currentMonthLabelEl.textContent = `(${monthlyData.currentMonthName})`;
+        const monthlyCurrentLabelEl = document.getElementById('monthlyCurrentLabel');
+        if (monthlyCurrentLabelEl) {
+            monthlyCurrentLabelEl.textContent = `(${monthlyData.currentMonthName})`;
         }
         
-        // Update Monthly Previous Month (Full Month)
-        const previousMonthEl = document.getElementById('previousMonthValue');
-        if (previousMonthEl) {
-            previousMonthEl.textContent = monthlyData.previousMonthTotal.toLocaleString();
+        // Update Monthly Previous Month
+        const monthlyPreviousValueEl = document.getElementById('monthlyPreviousValue');
+        if (monthlyPreviousValueEl) {
+            monthlyPreviousValueEl.textContent = monthlyData.previousMonthTotal.toLocaleString();
         }
         
-        const previousMonthLabelEl = document.getElementById('previousMonthLabel');
-        if (previousMonthLabelEl) {
-            previousMonthLabelEl.textContent = `(${monthlyData.previousMonthName})`;
+        const monthlyPreviousLabelEl = document.getElementById('monthlyPreviousLabel');
+        if (monthlyPreviousLabelEl) {
+            monthlyPreviousLabelEl.textContent = `(${monthlyData.previousMonthName})`;
         }
         
         // Calculate Achievement %
         const achievement = monthlyData.currentMonthTarget > 0 ? 
             ((monthlyData.currentMonthMTD / monthlyData.currentMonthTarget) * 100) : 0;
         
-        const achievementEl = document.getElementById('achievementPercent');
-        if (achievementEl) {
-            achievementEl.textContent = `${achievement.toFixed(1)}%`;
+        const monthlyAchievementValueEl = document.getElementById('monthlyAchievementValue');
+        if (monthlyAchievementValueEl) {
+            monthlyAchievementValueEl.textContent = `${achievement.toFixed(1)}%`;
             if (achievement >= 100) {
-                achievementEl.style.color = '#10b981'; // Green
+                monthlyAchievementValueEl.style.color = '#10b981'; // Green
             } else if (achievement >= 90) {
-                achievementEl.style.color = '#f59e0b'; // Orange
+                monthlyAchievementValueEl.style.color = '#f59e0b'; // Orange
             } else {
-                achievementEl.style.color = '#ef4444'; // Red
+                monthlyAchievementValueEl.style.color = '#ef4444'; // Red
             }
         }
         
-        console.log('✅ Page metrics updated successfully');
-        console.log('Weekly:', { currentWeek, previousWeek, wowGrowth: wowGrowth.toFixed(1) + '%' });
+        console.log('✅ Metrics updated successfully');
+        console.log('Weekly:', { 
+            current: currentWeek, 
+            previous: previousWeek, 
+            growth: wowGrowth.toFixed(1) + '%',
+            currentLabel: currentWeekLabel,
+            previousLabel: previousWeekLabel
+        });
         console.log('Monthly:', { 
             currentMTD: monthlyData.currentMonthMTD, 
             previousTotal: monthlyData.previousMonthTotal, 
@@ -1439,6 +1446,25 @@ function updatePageMetrics(nationalData, metrics, anomalies) {
         
     } catch (error) {
         console.error('❌ Error updating page metrics:', error);
+    }
+}
+function formatWeekLabel(weekString) {
+    try {
+        // weekString format: "2025-03-03" or "3/3/2025"
+        const date = new Date(weekString);
+        
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        const day = date.getDate();
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        
+        // Return format: "25 Dec 2025"
+        return `${day} ${month} ${year}`;
+    } catch (error) {
+        console.error('Error formatting week label:', error);
+        return weekString;
     }
 }
 
