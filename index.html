@@ -1903,256 +1903,604 @@ f<!DOCTYPE html>
                 </div>
             </div>
 
-            <!-- 1. BALI NUSRA Area - FIRST -->
-            <div class="variable-group" id="bali-nusra-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">BALI NUSRA Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+            <!-- BALI NUSRA Area -->
+<div class="variable-group" id="bali-nusra-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">BALI NUSRA Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="baliNusraPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="baliNusraPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
                 </div>
-                <div class="chart-metrics">
-                    <span>Center: 42.8</span>
-                    <span>Range: 18.4</span>
-                    <span>Upper: 91.7</span>
-                    <span>Lower: -6.1</span>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="baliNusraCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="baliNusraCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
                 </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - BALI NUSRA Area Values</h5>
-                        <canvas id="baliNusraChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - BALI NUSRA Area Moving Range</h5>
-                        <canvas id="baliNusraMRChart"></canvas>
-                    </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="baliNusraGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="baliNusraGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
                 </div>
-                <div class="variable-alerts" id="baliNusraAlerts"></div>
             </div>
-
-            <!-- 2. JAKARTA Area - SECOND -->
-            <div class="variable-group" id="jakarta-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">JAKARTA Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 68.3</span>
-                    <span>Range: 27.5</span>
-                    <span>Upper: 141.4</span>
-                    <span>Lower: -4.8</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - JAKARTA Area Values</h5>
-                        <canvas id="jakartaChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - JAKARTA Area Moving Range</h5>
-                        <canvas id="jakartaMRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="jakartaAlerts"></div>
-            </div>
-
-            <!-- 3. JAVA 1 Area - THIRD -->
-            <div class="variable-group" id="java1-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">JAVA 1 Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 75.2</span>
-                    <span>Range: 31.8</span>
-                    <span>Upper: 159.8</span>
-                    <span>Lower: -9.4</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - JAVA 1 Area Values</h5>
-                        <canvas id="java1Chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - JAVA 1 Area Moving Range</h5>
-                        <canvas id="java1MRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="java1Alerts"></div>
-            </div>
-
-            <!-- 4. JAVA 2 Area - FOURTH -->
-            <div class="variable-group" id="java2-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">JAVA 2 Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 90.4</span>
-                    <span>Range: 33.2</span>
-                    <span>Upper: 178.7</span>
-                    <span>Lower: 2.1</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - JAVA 2 Area Values</h5>
-                        <canvas id="java2Chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - JAVA 2 Area Moving Range</h5>
-                        <canvas id="java2MRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="java2Alerts"></div>
-            </div>
-
-            <!-- 5. JAVA 3 Area - FIFTH -->
-            <div class="variable-group" id="java3-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">JAVA 3 Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 45.6</span>
-                    <span>Range: 13.8</span>
-                    <span>Upper: 82.3</span>
-                    <span>Lower: 8.9</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - JAVA 3 Area Values</h5>
-                        <canvas id="java3Chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - JAVA 3 Area Moving Range</h5>
-                        <canvas id="java3MRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="java3Alerts"></div>
-            </div>
-
-            <!-- 6. KALIMANTAN Area - SIXTH -->
-            <div class="variable-group" id="kalimantan-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">KALIMANTAN Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 48.1</span>
-                    <span>Range: 15.2</span>
-                    <span>Upper: 88.5</span>
-                    <span>Lower: 7.7</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - KALIMANTAN Area Values</h5>
-                        <canvas id="kalimantanChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - KALIMANTAN Area Moving Range</h5>
-                        <canvas id="kalimantanMRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="kalimantanAlerts"></div>
-            </div>
-
-            <!-- 7. SULAWESI Area - SEVENTH -->
-            <div class="variable-group" id="sulawesi-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">SULAWESI Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 167.4</span>
-                    <span>Range: 52.3</span>
-                    <span>Upper: 306.5</span>
-                    <span>Lower: 28.3</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - SULAWESI Area Values</h5>
-                        <canvas id="sulawesiChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - SULAWESI Area Moving Range</h5>
-                        <canvas id="sulawesiMRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="sulawesiAlerts"></div>
-            </div>
-
-            <!-- 8. SUMATERA 1 Area - EIGHTH -->
-            <div class="variable-group" id="sumatera1-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">SUMATERA 1 Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 117.8</span>
-                    <span>Range: 41.5</span>
-                    <span>Upper: 228.2</span>
-                    <span>Lower: 7.4</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - SUMATERA 1 Area Values</h5>
-                        <canvas id="sumatera1Chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - SUMATERA 1 Area Moving Range</h5>
-                        <canvas id="sumatera1MRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="sumatera1Alerts"></div>
-            </div>
-
-            <!-- 9. SUMATERA 2 Area - NINTH -->
-            <div class="variable-group" id="sumatera2-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">SUMATERA 2 Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 54.7</span>
-                    <span>Range: 20.3</span>
-                    <span>Upper: 108.7</span>
-                    <span>Lower: 0.7</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - SUMATERA 2 Area Values</h5>
-                        <canvas id="sumatera2Chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - SUMATERA 2 Area Moving Range</h5>
-                        <canvas id="sumatera2MRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="sumatera2Alerts"></div>
-            </div>
-
-            <!-- 10. SUMATERA 3 Area - TENTH -->
-            <div class="variable-group" id="sumatera3-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">SUMATERA 3 Area - Complete XmR Analysis (21 Weeks)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                <div class="chart-metrics">
-                    <span>Center: 86.8</span>
-                    <span>Range: 28.4</span>
-                    <span>Upper: 162.4</span>
-                    <span>Lower: 11.2</span>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - SUMATERA 3 Area Values</h5>
-                        <canvas id="sumatera3Chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - SUMATERA 3 Area Moving Range</h5>
-                        <canvas id="sumatera3MRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="sumatera3Alerts"></div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="baliNusraChart"></canvas>
             </div>
         </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="baliNusraCurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="baliNusraCurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="baliNusraPreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="baliNusraPreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="baliNusraAchievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="baliNusraMonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- JAKARTA Area -->
+<div class="variable-group" id="jakarta-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">JAKARTA Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="jakartaPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="jakartaPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="jakartaCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="jakartaCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="jakartaGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="jakartaGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="jakartaChart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="jakartaCurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="jakartaCurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="jakartaPreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="jakartaPreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="jakartaAchievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="jakartaMonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- JAVA 1 Area -->
+<div class="variable-group" id="java1-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">JAVA 1 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="java1PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="java1PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="java1CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="java1CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="java1GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="java1GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="java1Chart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="java1CurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="java1CurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="java1PreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="java1PreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="java1Achievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="java1MonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- JAVA 2 Area -->
+<div class="variable-group" id="java2-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">JAVA 2 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="java2PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="java2PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="java2CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="java2CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="java2GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="java2GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="java2Chart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="java2CurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="java2CurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="java2PreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="java2PreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="java2Achievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="java2MonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- JAVA 3 Area -->
+<div class="variable-group" id="java3-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">JAVA 3 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="java3PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="java3PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="java3CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="java3CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="java3GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="java3GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="java3Chart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="java3CurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="java3CurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="java3PreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="java3PreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="java3Achievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="java3MonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- KALIMANTAN Area -->
+<div class="variable-group" id="kalimantan-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">KALIMANTAN Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="kalimantanPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="kalimantanPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="kalimantanCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="kalimantanCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="kalimantanGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="kalimantanGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="kalimantanChart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="kalimantanCurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="kalimantanCurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="kalimantanPreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="kalimantanPreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="kalimantanAchievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="kalimantanMonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- SULAWESI Area -->
+<div class="variable-group" id="sulawesi-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">SULAWESI Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="sulawesiPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sulawesiPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="sulawesiCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sulawesiCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="sulawesiGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="sulawesiGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sulawesiChart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="sulawesiCurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="sulawesiCurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sulawesiPreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="sulawesiPreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sulawesiAchievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sulawesiMonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- SUMATERA 1 Area -->
+<div class="variable-group" id="sumatera1-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">SUMATERA 1 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="sumatera1PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumatera1PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="sumatera1CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumatera1CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="sumatera1GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="sumatera1GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumatera1Chart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera1CurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="sumatera1CurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera1PreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="sumatera1PreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera1Achievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumatera1MonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- SUMATERA 2 Area -->
+<div class="variable-group" id="sumatera2-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">SUMATERA 2 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="sumatera2PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumatera2PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="sumatera2CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumatera2CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="sumatera2GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="sumatera2GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumatera2Chart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera2CurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="sumatera2CurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera2PreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="sumatera2PreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera2Achievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumatera2MonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+<!-- SUMATERA 3 Area -->
+<div class="variable-group" id="sumatera3-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">SUMATERA 3 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="sumatera3PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumatera3PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="sumatera3CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumatera3CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="sumatera3GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="sumatera3GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumatera3Chart"></canvas>
+            </div>
+        </div>
+        
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera3CurrentMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div id="sumatera3CurrentMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera3PreviousMTD" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div id="sumatera3PreviousMonthLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div id="sumatera3Achievement" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumatera3MonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+</div>
          <!-- Android Orders - Area Breakdown Analysis -->
 <div class="chart-section" id="android-area-analysis">
     <div class="section-header">
