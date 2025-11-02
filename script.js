@@ -390,11 +390,12 @@ function createUniversalCleanChart(canvasId, labels, actualData, targetData = nu
         
         if (idx === total - 1) {
             return `CURRENT: ${roundedValue.toLocaleString()}`;
+                }
+                return value.toLocaleString();
+            }
         }
-        return roundedValue.toLocaleString();
-    }
-}
-            scales: {
+    },
+    scales: {
                 y: {
                     beginAtZero: false,
                     title: {
