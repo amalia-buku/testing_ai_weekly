@@ -225,13 +225,13 @@ function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null
 }
 // ==================== REAL NATIONAL WEEKLY CHART FUNCTION ====================
 
+// Find and replace the entire createRealNationalWeeklyChart function
 async function createRealNationalWeeklyChart() {
     try {
-        console.log('📊 CREATING TOTAL ORDERS CHART WITH TARGET, ACTUAL, AND AVERAGE...');
+        console.log('📊 CREATING WEEKLY CHART WITH 8 DATA LABELS...');
         
-        // Load weekly data if not already loaded
         if (!window.weeklyData) {
-            console.log('⏳ Weekly data not found, loading now...');
+            console.log('⏳ Loading weekly data...');
             window.weeklyData = await buildWeeklyDataFromRaw();
         }
         
@@ -240,33 +240,41 @@ async function createRealNationalWeeklyChart() {
         }
         
         const nationalData = window.weeklyData.national['ALL PRODUCT']; 
-        console.log(`✅ Using ${nationalData.weeks.length} weeks of national data`);
+        console.log(`✅ Using ${nationalData.weeks.length} weeks of data`);
         
-        // Calculate XmR control metrics
         const metrics = calculateXmRMetrics(nationalData.actualOrders);
-        console.log('📈 XmR Control Metrics:', metrics);
-        
-        // Calculate average line (centerLineX is the average of actual orders)
         const averageLine = metrics.centerLineX;
-        console.log(`📊 Average Line: ${averageLine}`);
-        
-        // Detect anomalies
         const anomalies = detectAnomalies(nationalData.actualOrders, metrics);
-        console.log(`🔍 Detected ${anomalies.length} anomalies`);
         
-        // Find or create canvas
+        // Find highest and lowest
+        const maxValue = Math.max(...nationalData.actualOrders);
+        const minValue = Math.min(...nationalData.actualOrders);
+        const maxIndex = nationalData.actualOrders.indexOf(maxValue);
+        const minIndex = nationalData.actualOrders.indexOf(minValue);
+        
+        // Get current week + 4 previous weeks indices
+        const currentIndex = nationalData.actualOrders.length - 1;
+        const labelIndices = new Set([
+            currentIndex,
+            currentIndex - 1,
+            currentIndex - 2,
+            currentIndex - 3,
+            currentIndex - 4,
+            maxIndex,
+            minIndex
+        ]);
+        
         const canvas = document.getElementById('nationalWeeklyChart');
         if (!canvas) {
-            console.error('❌ Canvas element #nationalWeeklyChart not found!');
+            console.error('❌ Canvas #nationalWeeklyChart not found!');
             return;
         }
         
-        // Destroy existing chart if any
         if (canvas.chartInstance) {
             canvas.chartInstance.destroy();
         }
         
-        // ✅ ENHANCED CHART - Target, Actual, and Average
+        // Create chart
         const chart = new Chart(canvas, {
             type: 'line',
             data: {
@@ -277,11 +285,17 @@ async function createRealNationalWeeklyChart() {
                         data: nationalData.actualOrders,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        pointBackgroundColor: '#3b82f6',
+                        pointBackgroundColor: nationalData.actualOrders.map((_, idx) => {
+                            if (idx === maxIndex) return '#10b981';
+                            if (idx === minIndex) return '#ef4444';
+                            return '#3b82f6';
+                        }),
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
+                        pointRadius: nationalData.actualOrders.map((_, idx) => 
+                            labelIndices.has(idx) ? 7 : 4
+                        ),
+                        pointHoverRadius: 9,
                         tension: 0.3,
                         borderWidth: 3,
                         fill: true,
@@ -294,12 +308,12 @@ async function createRealNationalWeeklyChart() {
                         backgroundColor: 'transparent',
                         pointBackgroundColor: '#f97316',
                         pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
+                        pointBorderWidth: 1,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
                         tension: 0.1,
-                        borderWidth: 3,
-                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        borderDash: [2, 4],
                         fill: false,
                         order: 2
                     },
@@ -326,40 +340,16 @@ async function createRealNationalWeeklyChart() {
                 },
                 plugins: {
                     title: {
-                        display: true,
-                        text: 'Total Orders - Actual vs Target',
-                        font: {
-                            size: 20,
-                            weight: '700',
-                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                        },
-                        color: '#1e293b',
-                        padding: { top: 10, bottom: 20 }
-                    },
-                    subtitle: {
-                        display: true,
-                        text: 'Weekly Performance Tracking',
-                        font: {
-                            size: 14,
-                            weight: '400',
-                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                        },
-                        color: '#64748b',
-                        padding: { bottom: 15 }
+                        display: false
                     },
                     legend: {
                         display: true,
                         position: 'bottom',
                         labels: {
                             usePointStyle: true,
-                            padding: 15,
-                            font: {
-                                size: 13,
-                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                            },
-                            color: '#374151',
-                            boxWidth: 10,
-                            boxHeight: 10
+                            padding: 12,
+                            font: { size: 11 },
+                            color: '#374151'
                         }
                     },
                     tooltip: {
@@ -368,40 +358,55 @@ async function createRealNationalWeeklyChart() {
                         bodyColor: '#374151',
                         borderColor: '#e2e8f0',
                         borderWidth: 2,
-                        padding: 15,
-                        titleFont: {
-                            size: 14,
-                            weight: '600'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
+                        padding: 12,
                         callbacks: {
                             label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += context.parsed.y.toLocaleString();
-                                }
-                                return label;
+                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()}`;
                             },
                             afterBody: function(tooltipItems) {
                                 const idx = tooltipItems[0].dataIndex;
                                 const actual = nationalData.actualOrders[idx];
                                 const target = nationalData.targets[idx];
                                 const achievement = ((actual / target) * 100).toFixed(1);
-                                const gap = actual - target;
-                                const gapSign = gap >= 0 ? '+' : '';
-                                
                                 return [
                                     '',
                                     `Achievement: ${achievement}%`,
-                                    `Gap: ${gapSign}${gap.toLocaleString()} orders`,
                                     `Average: ${averageLine.toLocaleString()}`
                                 ];
                             }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return labelIndices.has(context.dataIndex);
+                        },
+                        align: function(context) {
+                            return context.dataIndex === minIndex ? 'bottom' : 'top';
+                        },
+                        offset: 8,
+                        font: function(context) {
+                            const idx = context.dataIndex;
+                            if (idx === currentIndex || idx === maxIndex || idx === minIndex) {
+                                return { size: 12, weight: 'bold' };
+                            }
+                            return { size: 11, weight: '600' };
+                        },
+                        color: function(context) {
+                            const idx = context.dataIndex;
+                            if (idx === maxIndex) return '#10b981';
+                            if (idx === minIndex) return '#ef4444';
+                            return '#333333';
+                        },
+                        formatter: function(value, context) {
+                            const idx = context.dataIndex;
+                            if (idx === currentIndex) return `CURRENT: ${value.toLocaleString()}`;
+                            if (idx === currentIndex - 1) return `WEEK-1: ${value.toLocaleString()}`;
+                            if (idx === currentIndex - 2) return `WEEK-2: ${value.toLocaleString()}`;
+                            if (idx === currentIndex - 3) return `WEEK-3: ${value.toLocaleString()}`;
+                            if (idx === currentIndex - 4) return `WEEK-4: ${value.toLocaleString()}`;
+                            if (idx === maxIndex) return `HIGHEST: ${value.toLocaleString()}`;
+                            if (idx === minIndex) return `LOWEST: ${value.toLocaleString()}`;
+                            return null;
                         }
                     }
                 },
@@ -410,69 +415,197 @@ async function createRealNationalWeeklyChart() {
                         title: {
                             display: true,
                             text: 'Total Orders',
-                            font: {
-                                size: 14,
-                                weight: '600',
-                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                            },
+                            font: { size: 13, weight: '600' },
                             color: '#374151'
                         },
                         beginAtZero: false,
                         ticks: {
-                            font: {
-                                size: 11,
-                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                            },
+                            font: { size: 10 },
                             color: '#64748b',
-                            callback: function(value) {
-                                return value.toLocaleString();
-                            }
+                            callback: value => value.toLocaleString()
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.1)',
-                            drawBorder: false
+                            color: 'rgba(148, 163, 184, 0.1)'
                         }
                     },
                     x: {
                         title: {
                             display: true,
                             text: 'Week',
-                            font: {
-                                size: 14,
-                                weight: '600',
-                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                            },
+                            font: { size: 13, weight: '600' },
                             color: '#374151'
                         },
                         ticks: {
                             maxRotation: 45,
                             minRotation: 45,
-                            font: {
-                                size: 10,
-                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                            },
-                            color: '#64748b'
+                            font: { size: 9 },
+                            color: '#64748b',
+                            maxTicksLimit: 15
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.08)',
-                            drawBorder: false
+                            color: 'rgba(148, 163, 184, 0.05)'
                         }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         });
         
         canvas.chartInstance = chart;
-        console.log('✅ Total Orders chart with Target, Actual, and Average created successfully!');
+        console.log('✅ Weekly chart created!');
         
-        // Update page metrics
         updatePageMetrics(nationalData, metrics, anomalies);
+        createMonthlyChart(nationalData.weeks, nationalData.actualOrders, nationalData.targets);
         
     } catch (error) {
-        console.error('❌ Error creating chart:', error);
+        console.error('❌ Error creating weekly chart:', error);
+    }
+}
+// Add this function for the monthly chart
+function createMonthlyChart(weeks, actualOrders, targets) {
+    try {
+        console.log('📊 Creating monthly chart...');
+        
+        const monthlyData = aggregateMonthlyData(weeks, actualOrders, targets);
+        const last6Months = monthlyData.slice(-6);
+        
+        const canvas = document.getElementById('monthlyChart');
+        if (!canvas) {
+            console.warn('Monthly chart canvas not found');
+            return;
+        }
+        
+        if (canvas.chartInstance) {
+            canvas.chartInstance.destroy();
+        }
+        
+        const chart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: last6Months.map(m => m.label),
+                datasets: [
+                    {
+                        label: 'Actual',
+                        data: last6Months.map(m => m.actual),
+                        backgroundColor: last6Months.map(m => 
+                            m.isPartial ? 'rgba(59, 130, 246, 0.6)' : '#3b82f6'
+                        ),
+                        borderColor: last6Months.map(m => m.isPartial ? '#3b82f6' : 'transparent'),
+                        borderWidth: 2,
+                        barThickness: 25
+                    },
+                    {
+                        label: 'Target',
+                        data: last6Months.map(m => m.target),
+                        backgroundColor: 'rgba(249, 115, 22, 0.5)',
+                        borderColor: '#f97316',
+                        borderWidth: 1,
+                        barThickness: 25
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 10,
+                            font: { size: 10 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(tooltipItems) {
+                                const idx = tooltipItems[0].dataIndex;
+                                const month = last6Months[idx];
+                                const achievement = ((month.actual / month.target) * 100).toFixed(1);
+                                return [`Achievement: ${achievement}%`, `Status: ${month.isPartial ? 'MTD' : 'Full'}`];
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return context.datasetIndex === 0;
+                        },
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 2,
+                        font: { size: 9, weight: 'bold' },
+                        formatter: function(value, context) {
+                            const month = last6Months[context.dataIndex];
+                            const achievement = ((month.actual / month.target) * 100).toFixed(0);
+                            const icon = achievement >= 100 ? '✅' : achievement >= 90 ? '🔶' : '❌';
+                            return `${achievement}% ${icon}`;
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 9 },
+                            callback: v => v.toLocaleString()
+                        }
+                    },
+                    x: {
+                        ticks: { font: { size: 9 } }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+        
+        canvas.chartInstance = chart;
+        console.log('✅ Monthly chart created!');
+        
+    } catch (error) {
+        console.error('Error creating monthly chart:', error);
     }
 }
 
+function aggregateMonthlyData(weeks, actualOrders, targets) {
+    const monthlyMap = new Map();
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    weeks.forEach((week, index) => {
+        const weekDate = new Date(week);
+        const month = weekDate.getMonth();
+        const year = weekDate.getFullYear();
+        const key = `${year}-${month}`;
+        
+        if (!monthlyMap.has(key)) {
+            monthlyMap.set(key, {
+                actual: 0,
+                target: 0,
+                month,
+                year,
+                label: `${monthNames[month]}-${String(year).slice(2)}`,
+                isPartial: false
+            });
+        }
+        
+        const data = monthlyMap.get(key);
+        data.actual += actualOrders[index];
+        data.target += targets[index];
+        
+        if (month === currentMonth && year === currentYear) {
+            data.isPartial = true;
+            data.label += ' (MTD)';
+        }
+    });
+    
+    return Array.from(monthlyMap.values()).sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month;
+    });
+}
 
 // Update page metrics display
 
@@ -1054,43 +1187,95 @@ async function createRegionalBreakdownCharts() {
     console.log('✅ All regional breakdown charts created successfully!');
 }
 
+// Find and replace the updatePageMetrics function
 function updatePageMetrics(nationalData, metrics, anomalies) {
     try {
         const weeks = nationalData.weeks;
         const actualOrders = nationalData.actualOrders;
         
         // Get current week and previous week data
-        const currentWeek = actualOrders[actualOrders.length - 1];
-        const previousWeek = actualOrders[actualOrders.length - 2];
+        const currentWeekValue = actualOrders[actualOrders.length - 1];
+        const previousWeekValue = actualOrders[actualOrders.length - 2];
         
-        // Calculate growth percentage
-        const growth = previousWeek ? (((currentWeek - previousWeek) / previousWeek) * 100) : 0;
-        const growthFormatted = growth >= 0 ? `+${growth.toFixed(1)}%` : `${growth.toFixed(1)}%`;
+        // Calculate WoW growth percentage
+        const wowGrowth = previousWeekValue ? (((currentWeekValue - previousWeekValue) / previousWeekValue) * 100) : 0;
+        const wowFormatted = wowGrowth >= 0 ? `+${wowGrowth.toFixed(1)}%` : `${wowGrowth.toFixed(1)}%`;
         
         // Update Current Week
         const currentWeekElement = document.getElementById('currentWeek');
         if (currentWeekElement) {
-            currentWeekElement.textContent = currentWeek.toLocaleString();
+            currentWeekElement.textContent = currentWeekValue.toLocaleString();
+        }
+        
+        const currentWeekDateElement = document.getElementById('currentWeekDate');
+        if (currentWeekDateElement && weeks.length > 0) {
+            currentWeekDateElement.textContent = `(${weeks[weeks.length - 1]})`;
         }
         
         // Update Previous Week
         const previousWeekElement = document.getElementById('previousWeek');
         if (previousWeekElement) {
-            previousWeekElement.textContent = previousWeek.toLocaleString();
+            previousWeekElement.textContent = previousWeekValue.toLocaleString();
         }
         
-        // Update Growth %
-        const growthElement = document.getElementById('growthPercent');
-        if (growthElement) {
-            growthElement.textContent = growthFormatted;
-            // Add color based on growth direction
-            if (growth > 0) {
-                growthElement.style.color = '#10b981'; // Green for positive
-            } else if (growth < 0) {
-                growthElement.style.color = '#ef4444'; // Red for negative
-            } else {
-                growthElement.style.color = '#64748b'; // Gray for zero
-            }
+        const previousWeekDateElement = document.getElementById('previousWeekDate');
+        if (previousWeekDateElement && weeks.length > 1) {
+            previousWeekDateElement.textContent = `(${weeks[weeks.length - 2]})`;
+        }
+        
+        // Update WoW Growth %
+        const wowGrowthElement = document.getElementById('wowGrowth');
+        if (wowGrowthElement) {
+            wowGrowthElement.textContent = wowFormatted;
+            wowGrowthElement.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
+        }
+        
+        const wowTrendElement = document.getElementById('wowTrend');
+        if (wowTrendElement) {
+            wowTrendElement.textContent = wowGrowth > 0 ? '⬆️ Increase' : wowGrowth < 0 ? '⬇️ Decrease' : '➡️ No Change';
+            wowTrendElement.style.color = wowGrowth >= 0 ? '#10b981' : '#ef4444';
+        }
+        
+        // Calculate Monthly Metrics
+        const monthlyData = calculateMonthlyMetrics(weeks, actualOrders);
+        
+        // Update Current Month MTD
+        const currentMonthMTDElement = document.getElementById('currentMonthMTD');
+        if (currentMonthMTDElement) {
+            currentMonthMTDElement.textContent = monthlyData.currentMonthMTD.toLocaleString();
+        }
+        
+        const currentMonthNameElement = document.getElementById('currentMonthName');
+        if (currentMonthNameElement) {
+            currentMonthNameElement.textContent = `(${monthlyData.currentMonthName})`;
+        }
+        
+        // Update Previous Month MTD
+        const previousMonthMTDElement = document.getElementById('previousMonthMTD');
+        if (previousMonthMTDElement) {
+            previousMonthMTDElement.textContent = monthlyData.previousMonthMTD.toLocaleString();
+        }
+        
+        const previousMonthNameElement = document.getElementById('previousMonthName');
+        if (previousMonthNameElement) {
+            previousMonthNameElement.textContent = `(${monthlyData.previousMonthName})`;
+        }
+        
+        // Calculate MoM growth
+        const momGrowth = monthlyData.previousMonthMTD ? (((monthlyData.currentMonthMTD - monthlyData.previousMonthMTD) / monthlyData.previousMonthMTD) * 100) : 0;
+        const momFormatted = momGrowth >= 0 ? `+${momGrowth.toFixed(1)}%` : `${momGrowth.toFixed(1)}%`;
+        
+        // Update MoM Growth %
+        const momGrowthElement = document.getElementById('momGrowth');
+        if (momGrowthElement) {
+            momGrowthElement.textContent = momFormatted;
+            momGrowthElement.style.color = momGrowth >= 0 ? '#10b981' : '#ef4444';
+        }
+        
+        const momTrendElement = document.getElementById('momTrend');
+        if (momTrendElement) {
+            momTrendElement.textContent = momGrowth > 0 ? '⬆️ Increase' : momGrowth < 0 ? '⬇️ Decrease' : '➡️ No Change';
+            momTrendElement.style.color = momGrowth >= 0 ? '#10b981' : '#ef4444';
         }
         
         console.log('✅ Page metrics updated successfully');
@@ -1099,6 +1284,48 @@ function updatePageMetrics(nationalData, metrics, anomalies) {
     }
 }
 
+// Add this new function if it doesn't exist
+function calculateMonthlyMetrics(weeks, actualOrders) {
+    try {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        let currentMonthMTD = 0;
+        let previousMonthMTD = 0;
+        
+        weeks.forEach((week, index) => {
+            const weekDate = new Date(week);
+            if (weekDate.getMonth() === currentMonth && weekDate.getFullYear() === currentYear) {
+                currentMonthMTD += actualOrders[index];
+            }
+            if (weekDate.getMonth() === previousMonth && weekDate.getFullYear() === previousYear) {
+                previousMonthMTD += actualOrders[index];
+            }
+        });
+        
+        return {
+            currentMonthMTD: currentMonthMTD,
+            previousMonthMTD: previousMonthMTD,
+            currentMonthName: `${monthNames[currentMonth]} ${currentYear}`,
+            previousMonthName: `${monthNames[previousMonth]} ${previousYear}`
+        };
+    } catch (error) {
+        console.error('Error calculating monthly metrics:', error);
+        return {
+            currentMonthMTD: 0,
+            previousMonthMTD: 0,
+            currentMonthName: '-',
+            previousMonthName: '-'
+        };
+    }
+}
 // Calculate XmR control metrics
 function calculateXmRMetrics(data) {
     // Calculate X-bar (mean)
