@@ -1358,11 +1358,19 @@ f<!DOCTYPE html>
 </div>
 
             <!-- Side-by-Side Charts -->
-            <div class="chart-container">
-    <canvas id="nationalWeeklyChart" style="max-height: 500px;"></canvas>
-</div>
-<!-- mR chart canvas hidden since it's now merged -->
-<canvas id="ordersMRChart" style="display: none;"></canvas>
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3>X Chart - Total Orders Values</h3>
+                    <canvas id="nationalWeeklyChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>mR Chart - Moving Range Values</h3>
+                    <canvas id="ordersMRChart"></canvas>
+                </div>
+            </div>
+
+            <div class="alerts" id="ordersAlerts"></div>
+        </div>
 
         <!-- Regional Performance Analysis Section -->
         <div class="chart-section" id="regional-analysis">
