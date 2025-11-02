@@ -578,15 +578,15 @@ function createUniversalCleanChart(canvasId, labels, actualData, targetData = nu
                         maxTicksLimit: 12,
                         autoSkip: true
                     },
-                    grid: {
-                        display: false,
-                        drawBorder: false
-                    }
+                      grid: {
+        display: false,
+        drawBorder: false
+    }
+}
                 }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
+            },
+            plugins: [ChartDataLabels]
+        });
     
     canvas.chartInstance = chart;
     console.log(`✅ Created clean chart: ${canvasId}`);
