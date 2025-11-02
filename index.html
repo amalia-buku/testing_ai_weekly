@@ -1319,44 +1319,31 @@ f<!DOCTYPE html>
         </div>
     </div>
 </div>
-
-        <!-- Northstar Metric XmR Charts -->
-        <div class="chart-section">
-            <div class="section-header">
-                <div class="section-icon">SC</div>
-                <div>
-                    <h2 class="section-title">Total Orders - XmR Statistical Control Charts</h2>
-                    <p class="section-subtitle">Primary business metric - Statistical Process Control Analysis with Target Performance Tracking (21-week foundation)</p>
-                </div>
-            </div>
-
-            <div class="metrics-grid" id="ordersMetrics">
+<!-- Metrics Scorecards - Only 3 cards -->
+<div class="metrics-container">
     <div class="metric-card">
-        <div class="metric-card-title">Current Week</div>
-        <div class="metric-card-value" id="currentWeek">-</div>
+        <div class="metric-label">Current Week</div>
+        <div class="metric-value" id="currentWeek">-</div>
     </div>
+    
     <div class="metric-card">
-        <div class="metric-card-title">Previous Week</div>
-        <div class="metric-card-value" id="previousWeek">-</div>
+        <div class="metric-label">Previous Week</div>
+        <div class="metric-value" id="previousWeek">-</div>
     </div>
+    
     <div class="metric-card">
-        <div class="metric-card-title">Center Line</div>
-        <div class="metric-card-value" id="centerLine">-</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-card-title">Upper Limit</div>
-        <div class="metric-card-value" id="upperLimit">-</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-card-title">Lower Limit</div>
-        <div class="metric-card-value" id="lowerLimit">-</div>
-    </div>
-    <div class="metric-card">
-        <div class="metric-card-title">Process Status</div>
-        <div class="metric-card-value" id="processStatus">-</div>
+        <div class="metric-label">Growth %</div>
+        <div class="metric-value" id="growthPercent">-</div>
     </div>
 </div>
 
+<!-- Single Chart Container -->
+<div class="chart-section">
+    <h3>X Chart - Total Orders Values</h3>
+    <canvas id="nationalWeeklyChart"></canvas>
+</div>
+
+<!-- Removed mR Chart section completely -->
             <!-- Side-by-Side Charts -->
             <div class="charts-row">
                 <div class="chart-container">
