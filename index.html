@@ -1387,17 +1387,71 @@ f<!DOCTYPE html>
 </div>
 
 <!-- Dual Chart Layout -->
-<div style="display: flex; gap: 24px; margin-top: 24px;">
-    <!-- Weekly Chart (70%) -->
-    <div style="flex: 0 0 70%; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1e293b;">Weekly Performance Chart</h3>
-        <canvas id="nationalWeeklyChart"></canvas>
+<!-- ==================== WEEKLY PERFORMANCE SECTION ==================== -->
+<div style="background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h2>
+    
+    <!-- Weekly Scorecards -->
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Previous Week</div>
+            <div id="weeklyPreviousWeek" style="font-size: 28px; font-weight: 700; color: #1e293b;">-</div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Growth %</div>
+            <div id="weeklyGrowth" style="font-size: 28px; font-weight: 700;">-</div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Current Week</div>
+            <div id="weeklyCurrent" style="font-size: 28px; font-weight: 700; color: #1e293b;">-</div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Previous Week</div>
+            <div id="weeklyPrevious2" style="font-size: 28px; font-weight: 700; color: #1e293b;">-</div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">MoM Growth %</div>
+            <div id="weeklyMoMGrowth" style="font-size: 28px; font-weight: 700;">-</div>
+        </div>
     </div>
     
-    <!-- Monthly Chart (30%) -->
-    <div style="flex: 0 0 calc(30% - 24px); background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1e293b;">Monthly Summary</h3>
-        <canvas id="monthlyChart"></canvas>
+    <!-- Weekly Chart -->
+    <div style="margin-top: 20px;">
+        <canvas id="nationalWeeklyChart" style="max-height: 400px;"></canvas>
+    </div>
+</div>
+
+<!-- ==================== MONTHLY PERFORMANCE SECTION ==================== -->
+<div style="background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h2>
+    
+    <!-- Monthly Scorecards -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+            <div style="font-size: 32px; font-weight: 700; color: #1e293b; margin-bottom: 8px;" id="currentMonthValue">-</div>
+            <div style="font-size: 12px; font-weight: 600; color: #64748b;">Current Month MTD</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;" id="currentMonthLabel">-</div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+            <div style="font-size: 32px; font-weight: 700; color: #1e293b; margin-bottom: 8px;" id="previousMonthValue">-</div>
+            <div style="font-size: 12px; font-weight: 600; color: #64748b;">Previous Month MTD</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;" id="previousMonthLabel">-</div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+            <div style="font-size: 32px; font-weight: 700; margin-bottom: 8px;" id="achievementPercent">-</div>
+            <div style="font-size: 12px; font-weight: 600; color: #64748b;">Achievement %</div>
+        </div>
+    </div>
+    
+    <!-- Monthly Chart -->
+    <div style="margin-top: 20px;">
+        <canvas id="monthlyChart" style="max-height: 400px;"></canvas>
     </div>
 </div>
 
