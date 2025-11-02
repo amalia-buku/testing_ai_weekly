@@ -2501,266 +2501,778 @@ f<!DOCTYPE html>
         
     </div>
 </div>
-         <!-- Android Orders - Area Breakdown Analysis -->
-<div class="chart-section" id="android-area-analysis">
-    <div class="section-header">
-        <div class="section-icon">AA</div>
-        <div>
-            <h2 class="section-title">Android Orders - Individual Area Analysis (Complete Coverage)</h2>
-            <p class="section-subtitle">Complete XmR analysis for Android orders across all geographic areas with both X and mR charts, optimal visualization standards (29-week foundation)</p>
-        </div>
-    </div>
 
-    <!-- 1. BALI NUSRA Area - Android Orders -->
-    <div class="variable-group" id="android-bali-nusra-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">BALI NUSRA Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidBaliNusraMetrics">
-            <span>Center: 18.1</span>
-            <span>Range: 8.7</span>
-            <span>Upper: 41.2</span>
-            <span>Lower: -5.0</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - BALI NUSRA Android Orders Values</h5>
+
+<!-- Android BALI NUSRA Area -->
+<div class="variable-group" id="android-bali-nusra-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android BALI NUSRA Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidBaliNusraPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidBaliNusraPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidBaliNusraCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidBaliNusraCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidBaliNusraGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidBaliNusraGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidBaliNusraChart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - BALI NUSRA Android Orders Moving Range</h5>
-                <canvas id="androidBaliNusraMRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidBaliNusraCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidBaliNusraCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidBaliNusraPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidBaliNusraPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidBaliNusraAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidBaliNusraMonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidBaliNusraAlerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 2. JAKARTA Area - Android Orders -->
-    <div class="variable-group" id="android-jakarta-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">JAKARTA Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidJakartaMetrics">
-            <span>Center: 22.9</span>
-            <span>Range: 11.4</span>
-            <span>Upper: 53.2</span>
-            <span>Lower: -7.4</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - JAKARTA Android Orders Values</h5>
+
+<!-- Android JAKARTA Area -->
+<div class="variable-group" id="android-jakarta-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android JAKARTA Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidJakartaPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJakartaPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidJakartaCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJakartaCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidJakartaGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidJakartaGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidJakartaChart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - JAKARTA Android Orders Moving Range</h5>
-                <canvas id="androidJakartaMRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJakartaCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJakartaCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJakartaPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJakartaPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidJakartaAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidJakartaMonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidJakartaAlerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 3. JAVA 1 Area - Android Orders -->
-    <div class="variable-group" id="android-java1-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">JAVA 1 Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidJava1Metrics">
-            <span>Center: 26.8</span>
-            <span>Range: 12.1</span>
-            <span>Upper: 59.0</span>
-            <span>Lower: -5.4</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - JAVA 1 Android Orders Values</h5>
+
+<!-- Android JAVA 1 Area -->
+<div class="variable-group" id="android-java1-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android JAVA 1 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidJava1PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJava1PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidJava1CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJava1CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidJava1GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidJava1GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidJava1Chart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - JAVA 1 Android Orders Moving Range</h5>
-                <canvas id="androidJava1MRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJava1CurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJava1CurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJava1PreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJava1PreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidJava1Achievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidJava1MonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidJava1Alerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 4. JAVA 2 Area - Android Orders -->
-    <div class="variable-group" id="android-java2-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">JAVA 2 Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidJava2Metrics">
-            <span>Center: 39.7</span>
-            <span>Range: 15.3</span>
-            <span>Upper: 80.4</span>
-            <span>Lower: -1.0</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - JAVA 2 Android Orders Values</h5>
+
+<!-- Android JAVA 2 Area -->
+<div class="variable-group" id="android-java2-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android JAVA 2 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidJava2PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJava2PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidJava2CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJava2CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidJava2GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidJava2GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidJava2Chart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - JAVA 2 Android Orders Moving Range</h5>
-                <canvas id="androidJava2MRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJava2CurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJava2CurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJava2PreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJava2PreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidJava2Achievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidJava2MonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidJava2Alerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 5. JAVA 3 Area - Android Orders -->
-    <div class="variable-group" id="android-java3-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">JAVA 3 Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidJava3Metrics">
-            <span>Center: 18.9</span>
-            <span>Range: 9.2</span>
-            <span>Upper: 43.4</span>
-            <span>Lower: -5.6</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - JAVA 3 Android Orders Values</h5>
+
+<!-- Android JAVA 3 Area -->
+<div class="variable-group" id="android-java3-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android JAVA 3 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidJava3PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJava3PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidJava3CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidJava3CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidJava3GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidJava3GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidJava3Chart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - JAVA 3 Android Orders Moving Range</h5>
-                <canvas id="androidJava3MRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJava3CurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJava3CurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidJava3PreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidJava3PreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidJava3Achievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidJava3MonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidJava3Alerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 6. KALIMANTAN Area - Android Orders -->
-    <div class="variable-group" id="android-kalimantan-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">KALIMANTAN Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidKalimantanMetrics">
-            <span>Center: 25.7</span>
-            <span>Range: 11.8</span>
-            <span>Upper: 57.1</span>
-            <span>Lower: -5.7</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - KALIMANTAN Android Orders Values</h5>
+
+<!-- Android KALIMANTAN Area -->
+<div class="variable-group" id="android-kalimantan-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android KALIMANTAN Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidKalimantanPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidKalimantanPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidKalimantanCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidKalimantanCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidKalimantanGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidKalimantanGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidKalimantanChart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - KALIMANTAN Android Orders Moving Range</h5>
-                <canvas id="androidKalimantanMRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidKalimantanCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidKalimantanCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidKalimantanPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidKalimantanPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidKalimantanAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidKalimantanMonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidKalimantanAlerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 7. SULAWESI Area - Android Orders -->
-    <div class="variable-group" id="android-sulawesi-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">SULAWESI Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+
+<!-- Android MALUKU PAPUA Area -->
+<div class="variable-group" id="android-maluku-papua-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android MALUKU PAPUA Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidMalukuPapuaPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidMalukuPapuaPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidMalukuPapuaCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidMalukuPapuaCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidMalukuPapuaGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidMalukuPapuaGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidMalukuPapuaChart"></canvas>
+            </div>
         </div>
-        <div class="chart-metrics" id="androidSulawesiMetrics">
-            <span>Center: 96.8</span>
-            <span>Range: 31.2</span>
-            <span>Upper: 179.8</span>
-            <span>Lower: 13.8</span>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidMalukuPapuaCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidMalukuPapuaCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidMalukuPapuaPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidMalukuPapuaPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidMalukuPapuaAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidMalukuPapuaMonthlyChart"></canvas>
+            </div>
         </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - SULAWESI Android Orders Values</h5>
+        
+    </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
+
+
+<!-- Android SULAWESI Area -->
+<div class="variable-group" id="android-sulawesi-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android SULAWESI Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidSulawesiPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidSulawesiPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidSulawesiCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidSulawesiCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidSulawesiGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidSulawesiGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidSulawesiChart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - SULAWESI Android Orders Moving Range</h5>
-                <canvas id="androidSulawesiMRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidSulawesiCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidSulawesiCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidSulawesiPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidSulawesiPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidSulawesiAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidSulawesiMonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidSulawesiAlerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 8. SUMATERA 1 Area - Android Orders -->
-    <div class="variable-group" id="android-sumatera1-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">SUMATERA 1 Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidSumatera1Metrics">
-            <span>Center: 53.1</span>
-            <span>Range: 22.4</span>
-            <span>Upper: 112.7</span>
-            <span>Lower: -6.5</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - SUMATERA 1 Android Orders Values</h5>
+
+<!-- Android SUMATERA 1 Area -->
+<div class="variable-group" id="android-sumatera1-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android SUMATERA 1 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidSumatera1PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidSumatera1PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidSumatera1CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidSumatera1CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidSumatera1GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidSumatera1GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidSumatera1Chart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - SUMATERA 1 Android Orders Moving Range</h5>
-                <canvas id="androidSumatera1MRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidSumatera1CurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidSumatera1CurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidSumatera1PreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidSumatera1PreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidSumatera1Achievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidSumatera1MonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidSumatera1Alerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
 
-    <!-- 9. SUMATERA 2 Area - Android Orders -->
-    <div class="variable-group" id="android-sumatera2-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">SUMATERA 2 Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidSumatera2Metrics">
-            <span>Center: 26.1</span>
-            <span>Range: 12.7</span>
-            <span>Upper: 59.9</span>
-            <span>Lower: -7.7</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - SUMATERA 2 Android Orders Values</h5>
-                <canvas id="androidSumatera2Chart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h5>mR Chart - SUMATERA 2 Android Orders Moving Range</h5>
-                <canvas id="androidSumatera2MRChart"></canvas>
-            </div>
-        </div>
-        <div class="variable-alerts" id="androidSumatera2Alerts"></div>
+
+<!-- Android SUMATERA 3 Area -->
+<div class="variable-group" id="android-sumatera3-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Android SUMATERA 3 Area - Complete Analysis</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
     </div>
-
-    <!-- 10. SUMATERA 3 Area - Android Orders -->
-    <div class="variable-group" id="android-sumatera3-section">
-        <div class="variable-group-header">
-            <h4 class="variable-title">SUMATERA 3 Area - Android Orders Complete XmR Analysis (29 Weeks)</h4>
-            <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-        </div>
-        <div class="chart-metrics" id="androidSumatera3Metrics">
-            <span>Center: 40.0</span>
-            <span>Range: 15.8</span>
-            <span>Upper: 82.0</span>
-            <span>Lower: -2.0</span>
-        </div>
-        <div class="charts-row">
-            <div class="chart-container">
-                <h5>X Chart - SUMATERA 3 Android Orders Values</h5>
+    
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="androidSumatera3PreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidSumatera3PreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="androidSumatera3CurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="androidSumatera3CurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="androidSumatera3GrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="androidSumatera3GrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
                 <canvas id="androidSumatera3Chart"></canvas>
             </div>
-            <div class="chart-container">
-                <h5>mR Chart - SUMATERA 3 Android Orders Moving Range</h5>
-                <canvas id="androidSumatera3MRChart"></canvas>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidSumatera3CurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidSumatera3CurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="androidSumatera3PreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="androidSumatera3PreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="androidSumatera3Achievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="androidSumatera3MonthlyChart"></canvas>
             </div>
         </div>
-        <div class="variable-alerts" id="androidSumatera3Alerts"></div>
+        
     </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
 </div>
+
+
 
 <script>
 // Toggle expandable sections functionality
