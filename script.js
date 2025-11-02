@@ -501,7 +501,7 @@ const chart = new Chart(canvas, {
             }
         } // ✅ END scales
     }, // ✅ END options
-    plugins: [ChartDataLabels]
+    // plugins: [ChartDataLabels]
 });
 
 canvas.chartInstance = chart;
@@ -633,42 +633,111 @@ console.log('🏷️ Will show labels at indices:', Array.from(labelIndices));
                         borderWidth: 1,
                         padding: 12
                     },
-                    ddatalabels: {
+                   datalabels: {
     display: function(context) {
-        return labelIndices.has(context.dataIndex);
+        // Only show labels on the main dataset (not target/average lines)
+        if (!config.showLabels || context.datasetIndex !== 0) return false;
+        
+        const idx = context.dataIndex;
+        const data = context.dataset.data;
+        
+        // Get non-zero data points
+        const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+        if (nonZeroData.length === 0) return false;
+        
+        // Find highest and lowest
+        const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+        const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+        
+        const maxIndex = maxItem.idx;
+        const minIndex = minItem.idx;
+        const currentIndex = data.length - 1;
+        const previousIndex = data.length - 2;
+        
+        // ✅ Show only these 4 points
+        return idx === currentIndex || idx === previousIndex || idx === maxIndex || idx === minIndex;
     },
     align: function(context) {
         const idx = context.dataIndex;
-        if (idx === minIndex) return 'bottom';
-        return 'top';
+        const data = context.dataset.data;
+        const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+        
+        if (nonZeroData.length === 0) return 'top';
+        
+        const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+        const minIndex = minItem.idx;
+        
+        // Show lowest point label at bottom, others at top
+        return idx === minIndex ? 'bottom' : 'top';
     },
     offset: 8,
     font: function(context) {
         const idx = context.dataIndex;
-        if (idx === maxIndex || idx === minIndex) {
-            return { size: 11, weight: 'bold' };
+        const total = context.dataset.data.length;
+        
+        // Current week gets bold, larger font
+        if (idx === total - 1) {
+            return { size: 12, weight: 'bold' };
         }
-        if (idx === currentIndex) {
-            return { size: 11, weight: 'bold' };
-        }
+        
         return { size: 10, weight: '600' };
     },
     color: function(context) {
         const idx = context.dataIndex;
-        if (idx === maxIndex) return '#10b981'; // Green for highest
-        if (idx === minIndex) return '#ef4444'; // Red for lowest
-        if (idx === currentIndex) return '#3b82f6'; // Blue for current
-        return '#64748b'; // Gray for others
+        const total = context.dataset.data.length;
+        const data = context.dataset.data;
+        
+        const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+        if (nonZeroData.length === 0) return '#64748b';
+        
+        const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+        const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+        
+        const maxIndex = maxItem.idx;
+        const minIndex = minItem.idx;
+        const currentIndex = total - 1;
+        const previousIndex = total - 2;
+        
+        if (idx === currentIndex) return '#3b82f6';  // Blue - Current
+        if (idx === previousIndex) return '#8b5cf6'; // Purple - Previous
+        if (idx === maxIndex) return '#10b981';      // Green - Highest
+        if (idx === minIndex) return '#ef4444';      // Red - Lowest
+        
+        return '#64748b';
     },
     formatter: function(value, context) {
         const idx = context.dataIndex;
-        if (idx === maxIndex) return `HIGHEST: ${value.toLocaleString()}`;
-        if (idx === minIndex) return `LOWEST: ${value.toLocaleString()}`;
-        if (idx === currentIndex) return `CURRENT: ${value.toLocaleString()}`;
-        return value.toLocaleString(); // Just number for previous weeks
-    }
-}
-                },
+        const total = context.dataset.data.length;
+        const data = context.dataset.data;
+        
+        const nonZeroData = data.map((val, i) => ({ val, idx: i })).filter(item => item.val > 0);
+        if (nonZeroData.length === 0) {
+            return Math.round(value).toLocaleString();
+        }
+        
+        const maxItem = nonZeroData.reduce((max, item) => item.val > max.val ? item : max);
+        const minItem = nonZeroData.reduce((min, item) => item.val < min.val ? item : min);
+        
+        const maxIndex = maxItem.idx;
+        const minIndex = minItem.idx;
+        const currentIndex = total - 1;
+        const previousIndex = total - 2;
+        
+        const roundedValue = Math.round(value);
+        
+        if (idx === currentIndex) return `CURRENT: ${roundedValue.toLocaleString()}`;
+        if (idx === previousIndex) return `PREV: ${roundedValue.toLocaleString()}`;
+        if (idx === maxIndex) return `HIGHEST: ${roundedValue.toLocaleString()}`;
+        if (idx === minIndex) return `LOWEST: ${roundedValue.toLocaleString()}`;
+        
+        return roundedValue.toLocaleString();
+    },
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: '#e2e8f0',
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 6
+},
                 scales: {
                     y: {
                         beginAtZero: false,
@@ -3620,61 +3689,61 @@ function getMRChartYAxisRange(movingRanges, metrics) {
 }
 
 // Enhanced data labels plugin for Chart.js with professional styling
-const professionalDataLabelsPlugin = {
-    id: 'professionalDataLabels',
-    afterDatasetsDraw: function(chart) {
-        const ctx = chart.ctx;
-        chart.data.datasets.forEach((dataset, datasetIndex) => {
-            // Add labels to the main data series (first dataset) and target data (if present)
-            if (datasetIndex === 0 || dataset.label === 'Target') {
-                const meta = chart.getDatasetMeta(datasetIndex);
-                meta.data.forEach((element, index) => {
-                    const dataValue = dataset.data[index];
+// const professionalDataLabelsPlugin = {
+//     id: 'professionalDataLabels',
+//     afterDatasetsDraw: function(chart) {
+//         const ctx = chart.ctx;
+//         chart.data.datasets.forEach((dataset, datasetIndex) => {
+//             // Add labels to the main data series (first dataset) and target data (if present)
+//             if (datasetIndex === 0 || dataset.label === 'Target') {
+//                 const meta = chart.getDatasetMeta(datasetIndex);
+//                 meta.data.forEach((element, index) => {
+//                     const dataValue = dataset.data[index];
 
-                    // Skip null values (no target data for certain weeks)
-                    if (dataValue === null || dataValue === undefined) return;
+//                     // Skip null values (no target data for certain weeks)
+//                     if (dataValue === null || dataValue === undefined) return;
 
-                    const position = element.tooltipPosition();
+//                     const position = element.tooltipPosition();
 
-                    // Check if this is a holiday week
-                    const isHoliday = lebaranExclusionIndices.includes(index);
-                    const isTarget = dataset.label === 'Target';
+//                     // Check if this is a holiday week
+//                     const isHoliday = lebaranExclusionIndices.includes(index);
+//                     const isTarget = dataset.label === 'Target';
 
-                    // Set professional text style based on data type
-                    if (isTarget) {
-                        ctx.fillStyle = isHoliday ? '#9ca3af' : '#f59e0b'; // Professional grey for holiday target, amber for normal target
-                        ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    } else {
-                        ctx.fillStyle = isHoliday ? '#9ca3af' : '#374151'; // Professional grey for holidays, slate for normal
-                        ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    }
+//                     // Set professional text style based on data type
+//                     if (isTarget) {
+//                         ctx.fillStyle = isHoliday ? '#9ca3af' : '#f59e0b'; // Professional grey for holiday target, amber for normal target
+//                         ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+//                     } else {
+//                         ctx.fillStyle = isHoliday ? '#9ca3af' : '#374151'; // Professional grey for holidays, slate for normal
+//                         ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+//                     }
 
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = isTarget ? 'top' : 'bottom'; // Target labels below, actual labels above
+//                     ctx.textAlign = 'center';
+//                     ctx.textBaseline = isTarget ? 'top' : 'bottom'; // Target labels below, actual labels above
 
-                    // Format the value
-                    let displayValue;
-                    if (dataset.label && dataset.label.includes('Moving Range')) {
-                        displayValue = dataValue.toFixed(1);
-                    } else {
-                        displayValue = Math.round(dataValue).toString();
-                    }
+//                     // Format the value
+//                     let displayValue;
+//                     if (dataset.label && dataset.label.includes('Moving Range')) {
+//                         displayValue = dataValue.toFixed(1);
+//                     } else {
+//                         displayValue = Math.round(dataValue).toString();
+//                     }
 
-                    // Add markers for holidays and targets
-                    if (isHoliday && isTarget && dataValue === 0) {
-                        displayValue = "0"; // Holiday target (no asterisk, grey color shows it's holiday)
-                    } else if (isTarget) {
-                        displayValue = `T:${displayValue}`; // Target prefix
-                    }
+//                     // Add markers for holidays and targets
+//                     if (isHoliday && isTarget && dataValue === 0) {
+//                         displayValue = "0"; // Holiday target (no asterisk, grey color shows it's holiday)
+//                     } else if (isTarget) {
+//                         displayValue = `T:${displayValue}`; // Target prefix
+//                     }
 
-                    // Position labels to avoid overlap
-                    const yOffset = isTarget ? 8 : -8; // Target labels below points, actual above
-                    ctx.fillText(displayValue, position.x, position.y + yOffset);
-                });
-            }
-        });
-    }
-};
+//                     // Position labels to avoid overlap
+//                     const yOffset = isTarget ? 8 : -8; // Target labels below points, actual above
+//                     ctx.fillText(displayValue, position.x, position.y + yOffset);
+//                 });
+//             }
+//         });
+//     }
+// };
 
 // Register the professional plugin
 Chart.register(professionalDataLabelsPlugin);
