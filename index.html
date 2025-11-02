@@ -1468,7 +1468,7 @@ f<!DOCTYPE html>
     
     <!-- Monthly Scorecards - 1 COMPACT ROW -->
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-       <!-- Current Month MTD - COMPACT -->
+        <!-- Current Month MTD - COMPACT -->
         <div style="text-align: center; flex: 1;">
             <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="monthlyCurrentValue">-</div>
             <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
@@ -1488,6 +1488,12 @@ f<!DOCTYPE html>
             <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
         </div>
     </div>
+    
+    <!-- Monthly Chart - IMPORTANT: Don't remove this! -->
+    <div style="margin-top: 20px; height: 400px;">
+        <canvas id="monthlyChart"></canvas>
+    </div>
+</div>
 
 <!-- Remove/Hide the old mR Chart below if it exists -->
 <div style="display: none;">
