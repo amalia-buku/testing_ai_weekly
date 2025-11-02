@@ -225,12 +225,10 @@ function getWeeklyTarget(targets, week, positionLevel, productLevel, area = null
 }
 // ==================== REAL NATIONAL WEEKLY CHART FUNCTION ====================
 
-// Find and replace the entire createRealNationalWeeklyChart function
 async function createRealNationalWeeklyChart() {
     try {
         console.log('📊 Creating Weekly Performance Chart...');
         
-        // Load data if not already loaded
         if (!window.weeklyData) {
             console.log('⏳ Loading weekly data...');
             window.weeklyData = await buildWeeklyDataFromRaw();
@@ -243,49 +241,36 @@ async function createRealNationalWeeklyChart() {
         const nationalData = window.weeklyData.national['ALL PRODUCT'];
         console.log(`✅ Using ${nationalData.weeks.length} weeks of data`);
         
-        // Calculate metrics
         const metrics = calculateXmRMetrics(nationalData.actualOrders);
         const averageLine = metrics.centerLineX;
         const anomalies = detectAnomalies(nationalData.actualOrders, metrics);
         
-        console.log('📈 Average Line:', averageLine);
-        
-        // Find highest and lowest points
         const maxValue = Math.max(...nationalData.actualOrders);
         const minValue = Math.min(...nationalData.actualOrders);
         const maxIndex = nationalData.actualOrders.indexOf(maxValue);
         const minIndex = nationalData.actualOrders.indexOf(minValue);
         
-        console.log('📊 Max:', maxValue, 'at index', maxIndex);
-        console.log('📊 Min:', minValue, 'at index', minIndex);
-        
-        // Determine which points to label (8 labels total)
         const currentIndex = nationalData.actualOrders.length - 1;
         const labelIndices = new Set([
-            currentIndex,      // Current week
-            currentIndex - 1,  // Week -1
-            currentIndex - 2,  // Week -2
-            currentIndex - 3,  // Week -3
-            currentIndex - 4,  // Week -4
-            maxIndex,          // Highest
-            minIndex           // Lowest
+            currentIndex,
+            currentIndex - 1,
+            currentIndex - 2,
+            currentIndex - 3,
+            currentIndex - 4,
+            maxIndex,
+            minIndex
         ]);
         
-        console.log('🏷️ Label indices:', Array.from(labelIndices));
-        
-        // Get canvas
         const canvas = document.getElementById('nationalWeeklyChart');
         if (!canvas) {
             console.error('❌ Canvas #nationalWeeklyChart not found!');
             return;
         }
         
-        // Destroy existing chart
         if (canvas.chartInstance) {
             canvas.chartInstance.destroy();
         }
         
-        // Create the chart
         const chart = new Chart(canvas, {
             type: 'line',
             data: {
@@ -297,9 +282,9 @@ async function createRealNationalWeeklyChart() {
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         pointBackgroundColor: nationalData.actualOrders.map((_, idx) => {
-                            if (idx === maxIndex) return '#10b981'; // Green for highest
-                            if (idx === minIndex) return '#ef4444'; // Red for lowest
-                            return '#3b82f6'; // Blue for normal
+                            if (idx === maxIndex) return '#10b981';
+                            if (idx === minIndex) return '#ef4444';
+                            return '#3b82f6';
                         }),
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
@@ -340,15 +325,12 @@ async function createRealNationalWeeklyChart() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 interaction: {
                     mode: 'index',
                     intersect: false
                 },
                 plugins: {
-                    title: {
-                        display: false
-                    },
                     legend: {
                         display: true,
                         position: 'bottom',
@@ -365,12 +347,7 @@ async function createRealNationalWeeklyChart() {
                         bodyColor: '#374151',
                         borderColor: '#e2e8f0',
                         borderWidth: 1,
-                        padding: 12,
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()}`;
-                            }
-                        }
+                        padding: 12
                     },
                     datalabels: {
                         display: function(context) {
@@ -401,22 +378,17 @@ async function createRealNationalWeeklyChart() {
                 scales: {
                     y: {
                         beginAtZero: false,
-                        title: {
-                            display: false
-                        },
                         ticks: {
                             font: { size: 10 },
                             color: '#64748b',
                             callback: v => v.toLocaleString()
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.1)'
+                            color: 'rgba(148, 163, 184, 0.1)',
+                            drawBorder: false
                         }
                     },
                     x: {
-                        title: {
-                            display: false
-                        },
                         ticks: {
                             maxRotation: 45,
                             minRotation: 45,
@@ -425,7 +397,8 @@ async function createRealNationalWeeklyChart() {
                             maxTicksLimit: 15
                         },
                         grid: {
-                            display: false
+                            display: false,
+                            drawBorder: false
                         }
                     }
                 }
@@ -436,15 +409,11 @@ async function createRealNationalWeeklyChart() {
         canvas.chartInstance = chart;
         console.log('✅ Weekly chart created successfully');
         
-        // Update metrics
         updatePageMetrics(nationalData, metrics, anomalies);
-        
-        // Create monthly chart
         createMonthlyChart(nationalData.weeks, nationalData.actualOrders, nationalData.targets);
         
     } catch (error) {
         console.error('❌ Error creating weekly chart:', error);
-        console.error('Error details:', error.stack);
     }
 }
 
@@ -452,13 +421,8 @@ function createMonthlyChart(weeks, actualOrders, targets) {
     try {
         console.log('📊 Creating Monthly Chart...');
         
-        // Aggregate data by month
         const monthlyData = aggregateMonthlyData(weeks, actualOrders, targets);
-        console.log('📅 Monthly data aggregated:', monthlyData.length, 'months');
-        
-        // Get last 7 months
         const last7Months = monthlyData.slice(-7);
-        console.log('📅 Showing last 7 months:', last7Months.map(m => m.label));
         
         const canvas = document.getElementById('monthlyChart');
         if (!canvas) {
@@ -466,12 +430,10 @@ function createMonthlyChart(weeks, actualOrders, targets) {
             return;
         }
         
-        // Destroy existing chart
         if (canvas.chartInstance) {
             canvas.chartInstance.destroy();
         }
         
-        // Create the chart
         const chart = new Chart(canvas, {
             type: 'bar',
             data: {
@@ -481,21 +443,19 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                         label: 'Actual',
                         data: last7Months.map(m => m.actual),
                         backgroundColor: '#3b82f6',
-                        barThickness: 35,
-                        order: 1
+                        barThickness: 30
                     },
                     {
                         label: 'Target',
                         data: last7Months.map(m => m.target),
                         backgroundColor: '#f59e0b',
-                        barThickness: 35,
-                        order: 2
+                        barThickness: 30
                     }
                 ]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: true,
@@ -503,7 +463,9 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                         labels: {
                             usePointStyle: true,
                             padding: 10,
-                            font: { size: 11 }
+                            font: { size: 10 },
+                            boxWidth: 10,
+                            boxHeight: 10
                         }
                     },
                     tooltip: {
@@ -523,12 +485,12 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                     },
                     datalabels: {
                         display: function(context) {
-                            return context.datasetIndex === 0; // Only show on Actual bars
+                            return context.datasetIndex === 0;
                         },
                         anchor: 'end',
                         align: 'top',
                         offset: 4,
-                        font: { size: 10, weight: 'bold' },
+                        font: { size: 9, weight: 'bold' },
                         color: '#1e293b',
                         formatter: function(value, context) {
                             const month = last7Months[context.dataIndex];
@@ -540,20 +502,30 @@ function createMonthlyChart(weeks, actualOrders, targets) {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            font: { size: 10 },
-                            callback: v => v.toLocaleString()
+                        border: {
+                            display: false  // Remove Y-axis border
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.1)'
+                            display: false,  // Remove horizontal grid lines
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: 9 },
+                            color: '#64748b',
+                            callback: v => v.toLocaleString()
                         }
                     },
                     x: {
-                        ticks: {
-                            font: { size: 10 }
+                        border: {
+                            display: false  // Remove X-axis border
                         },
                         grid: {
-                            display: false
+                            display: false,  // Remove vertical grid lines
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: 9 },
+                            color: '#64748b'
                         }
                     }
                 }
@@ -566,7 +538,6 @@ function createMonthlyChart(weeks, actualOrders, targets) {
         
     } catch (error) {
         console.error('❌ Error creating monthly chart:', error);
-        console.error('Error details:', error.stack);
     }
 }
 function aggregateMonthlyData(weeks, actualOrders, targets) {
