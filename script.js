@@ -82,21 +82,58 @@ async function loadMonthlyTargets() {
 }
 
 // Get current month and day dynamically
+// Get current month and day dynamically with early-month handling
 function getCurrentMonthDay() {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = now.getDate();
-    const currentMonth = `${year}-${month}-01`;
     
-    // Calculate last month
-    const lastMonthDate = new Date(now);
-    lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-    const lastYear = lastMonthDate.getFullYear();
-    const lastMonthNum = String(lastMonthDate.getMonth() + 1).padStart(2, '0');
-    const lastMonth = `${lastYear}-${lastMonthNum}-01`;
+    let currentMonth, lastMonth, currentDay;
     
-    return { currentMonth, lastMonth, currentDay: day };
+    // 🎯 EARLY MONTH LOGIC: If before 7th, use full previous month as "current"
+    if (day < 7) {
+        console.log(`📅 Early month detected (Day ${day} < 7) - Using previous full month as current`);
+        
+        // Current month = Previous month (full)
+        const prevMonthDate = new Date(now);
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        const prevYear = prevMonthDate.getFullYear();
+        const prevMonthNum = String(prevMonthDate.getMonth() + 1).padStart(2, '0');
+        currentMonth = `${prevYear}-${prevMonthNum}-01`;
+        
+        // Use last day of previous month for MTD calculation (full month)
+        const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        currentDay = lastDayOfPrevMonth;
+        
+        // Last month = 2 months ago
+        const twoMonthsAgo = new Date(now);
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        const twoMonthsYear = twoMonthsAgo.getFullYear();
+        const twoMonthsNum = String(twoMonthsAgo.getMonth() + 1).padStart(2, '0');
+        lastMonth = `${twoMonthsYear}-${twoMonthsNum}-01`;
+        
+        console.log(`   ✅ Current Month (Full): ${currentMonth} (Day ${currentDay})`);
+        console.log(`   ✅ Previous Month: ${lastMonth}`);
+        
+    } else {
+        // Normal logic: Use actual current month MTD
+        currentMonth = `${year}-${month}-01`;
+        currentDay = day;
+        
+        // Calculate last month
+        const lastMonthDate = new Date(now);
+        lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+        const lastYear = lastMonthDate.getFullYear();
+        const lastMonthNum = String(lastMonthDate.getMonth() + 1).padStart(2, '0');
+        lastMonth = `${lastYear}-${lastMonthNum}-01`;
+        
+        console.log(`📅 Normal month period (Day ${day} >= 7) - Using current month MTD`);
+        console.log(`   ✅ Current Month MTD: ${currentMonth} (Day ${currentDay})`);
+        console.log(`   ✅ Previous Month: ${lastMonth}`);
+    }
+    
+    return { currentMonth, lastMonth, currentDay };
 }
 
 // Filter and sum orders based on criteria
@@ -1573,19 +1610,34 @@ function updateChartMTDScorecard(prefix, weeks, actualOrders) {
     const currentMonth = monthlyData[monthlyData.length - 1];
     const previousMonth = monthlyData[monthlyData.length - 2];
     
+    // Check if we're in early month mode
+    const now = new Date();
+    const isEarlyMonth = now.getDate() < 7;
+    
     // Current Month MTD
     const currMTDEl = document.getElementById(`${prefix}CurrentMTD`);
     if (currMTDEl) currMTDEl.textContent = currentMonth.actual.toLocaleString();
     
     const currMonthLabelEl = document.getElementById(`${prefix}CurrentMonthLabel`);
-    if (currMonthLabelEl) currMonthLabelEl.textContent = currentMonth.label;
+    if (currMonthLabelEl) {
+        // Show "Full Month" label for early month period
+        const label = isEarlyMonth ? 
+            `${currentMonth.label} (Full Month)` : 
+            currentMonth.label;
+        currMonthLabelEl.textContent = label;
+    }
     
     // Previous Month MTD
     const prevMTDEl = document.getElementById(`${prefix}PreviousMTD`);
     if (prevMTDEl) prevMTDEl.textContent = previousMonth.actual.toLocaleString();
     
     const prevMonthLabelEl = document.getElementById(`${prefix}PreviousMonthLabel`);
-    if (prevMonthLabelEl) prevMonthLabelEl.textContent = previousMonth.label;
+    if (prevMonthLabelEl) {
+        const label = isEarlyMonth ? 
+            `${previousMonth.label} (Full Month)` : 
+            previousMonth.label;
+        prevMonthLabelEl.textContent = label;
+    }
     
     // Achievement (Current vs Previous)
     const achievement = ((currentMonth.actual / previousMonth.actual) * 100);
