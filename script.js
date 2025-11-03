@@ -964,9 +964,11 @@ function createMonthlyChart(weeks, actualOrders, targets) {
     }
 }
 
+
 function aggregateMonthlyData(weeks, actualOrders, targets) {
     const monthlyMap = new Map();
     const now = new Date();
+    const currentDay = now.getDate();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     
@@ -994,9 +996,10 @@ function aggregateMonthlyData(weeks, actualOrders, targets) {
         monthData.actual += actualOrders[index];
         monthData.target += targets[index];
         
-        // Mark current month as partial (MTD)
-        if (month === currentMonth && year === currentYear) {
+        // Mark current month as partial ONLY if day >= 7
+        if (month === currentMonth && year === currentYear && currentDay >= 7) {
             monthData.isPartial = true;
+            monthData.label += ' (MTD)';
         }
     });
     
@@ -2162,12 +2165,9 @@ function formatWeekLabel(weekString) {
 function calculateMonthlyMetrics(weeks, actualOrders, targets) {
     try {
         const now = new Date();
+        const currentDay = now.getDate();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
-        
-        // Calculate previous month
-        const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-        const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
         
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                           'July', 'August', 'September', 'October', 'November', 'December'];
@@ -2176,31 +2176,70 @@ function calculateMonthlyMetrics(weeks, actualOrders, targets) {
         let currentMonthTarget = 0;
         let previousMonthTotal = 0;
         let previousMonthTarget = 0;
+        let displayCurrentMonth, displayPreviousMonth;
+        let displayCurrentYear, displayPreviousYear;
         
-        // Loop through all weeks
+        // 🎯 EARLY MONTH LOGIC: If before 7th, show full previous month as "current"
+        if (currentDay < 7) {
+            console.log(`📅 Early month detected (Day ${currentDay} < 7) - Using full previous month as current`);
+            
+            // "Current" = Previous month (FULL)
+            displayCurrentMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            displayCurrentYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            
+            // "Previous" = 2 months ago (FULL)
+            let twoMonthsAgo = currentMonth - 2;
+            displayPreviousYear = currentYear;
+            
+            if (twoMonthsAgo < 0) {
+                twoMonthsAgo += 12;
+                displayPreviousYear = currentYear - 1;
+            }
+            displayPreviousMonth = twoMonthsAgo;
+            
+        } else {
+            // Normal logic: Current month MTD vs Previous month
+            displayCurrentMonth = currentMonth;
+            displayCurrentYear = currentYear;
+            
+            displayPreviousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            displayPreviousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        }
+        
+        // Loop through all weeks to aggregate data
         weeks.forEach((week, index) => {
             const weekDate = new Date(week);
             const weekMonth = weekDate.getMonth();
             const weekYear = weekDate.getFullYear();
             
-            // Current month MTD
-            if (weekMonth === currentMonth && weekYear === currentYear) {
+            // "Current" month data
+            if (weekMonth === displayCurrentMonth && weekYear === displayCurrentYear) {
                 currentMonthMTD += actualOrders[index];
                 currentMonthTarget += targets[index];
             }
             
-            // Previous month FULL MONTH
-            if (weekMonth === previousMonth && weekYear === previousYear) {
+            // "Previous" month data
+            if (weekMonth === displayPreviousMonth && weekYear === displayPreviousYear) {
                 previousMonthTotal += actualOrders[index];
                 previousMonthTarget += targets[index];
             }
         });
         
+        // Build display names
+        const currentMonthLabel = currentDay < 7 ? 
+            `${monthNames[displayCurrentMonth]} ${displayCurrentYear} (Full Month)` :
+            `${monthNames[displayCurrentMonth]} ${displayCurrentYear}`;
+            
+        const previousMonthLabel = currentDay < 7 ?
+            `${monthNames[displayPreviousMonth]} ${displayPreviousYear} (Full Month)` :
+            `${monthNames[displayPreviousMonth]} ${displayPreviousYear}`;
+        
         console.log('📅 Monthly Calculations:', {
-            currentMonth: monthNames[currentMonth],
+            isEarlyMonth: currentDay < 7,
+            currentMonth: monthNames[displayCurrentMonth],
             currentMTD: currentMonthMTD,
             currentTarget: currentMonthTarget,
-            previousMonth: monthNames[previousMonth],
+            previousMonth: monthNames[displayPreviousMonth],
             previousTotal: previousMonthTotal
         });
         
@@ -2209,8 +2248,8 @@ function calculateMonthlyMetrics(weeks, actualOrders, targets) {
             currentMonthTarget,
             previousMonthTotal,
             previousMonthTarget,
-            currentMonthName: `${monthNames[currentMonth]} ${currentYear}`,
-            previousMonthName: `${monthNames[previousMonth]} ${previousYear}`
+            currentMonthName: currentMonthLabel,
+            previousMonthName: previousMonthLabel
         };
         
     } catch (error) {
@@ -2225,7 +2264,6 @@ function calculateMonthlyMetrics(weeks, actualOrders, targets) {
         };
     }
 }
-
 
 
 // ==================== BUILD WEEKLY DATA FROM RAW FILES ====================
