@@ -633,10 +633,10 @@ console.log('🏷️ Will show labels at indices:', Array.from(labelIndices));
                         borderWidth: 1,
                         padding: 12
                     },
-                   datalabels: {
+       datalabels: {
     display: function(context) {
-        // Only show labels on the main dataset (not target/average lines)
-        if (!config.showLabels || context.datasetIndex !== 0) return false;
+        // Only show labels on the Actual Orders dataset (index 0)
+        if (context.datasetIndex !== 0) return false;
         
         const idx = context.dataIndex;
         const data = context.dataset.data;
@@ -725,10 +725,10 @@ console.log('🏷️ Will show labels at indices:', Array.from(labelIndices));
         
         const roundedValue = Math.round(value);
         
-        if (idx === currentIndex) return `CURRENT: ${roundedValue.toLocaleString()}`;
-        if (idx === previousIndex) return `PREV: ${roundedValue.toLocaleString()}`;
-        if (idx === maxIndex) return `HIGHEST: ${roundedValue.toLocaleString()}`;
-        if (idx === minIndex) return `LOWEST: ${roundedValue.toLocaleString()}`;
+        if (idx === currentIndex) return 'CURRENT: ' + roundedValue.toLocaleString();
+        if (idx === previousIndex) return 'PREV: ' + roundedValue.toLocaleString();
+        if (idx === maxIndex) return 'HIGHEST: ' + roundedValue.toLocaleString();
+        if (idx === minIndex) return 'LOWEST: ' + roundedValue.toLocaleString();
         
         return roundedValue.toLocaleString();
     },
