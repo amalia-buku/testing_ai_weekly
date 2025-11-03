@@ -3747,7 +3747,7 @@ function getMRChartYAxisRange(movingRanges, metrics) {
 // };
 
 // Register the professional plugin
-Chart.register(professionalDataLabelsPlugin);
+// Chart.register(professionalDataLabelsPlugin);
 function createRegionalLineChart(canvasId, regionData, regionName, areaNames, areaColors) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {
