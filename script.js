@@ -2652,10 +2652,10 @@ async function buildMTDDataFromRaw() {
     });
     
     // 4. AREA LEVEL - Individual Areas
- const allAreas = [
-    'Bali Nusra', 'Jakarta', 'Java 1', 'Java 2', 'Java 3',
-    'Kalimantan', 'Sulawesi', 'Sumatera 1', 'Sumatera 2', 'Sumatera 3'
-];
+    const allAreas = [
+        'BALI NUSRA', 'JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3',
+        'KALIMANTAN', 'SULAWESI', 'SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3'
+    ];
     
     allAreas.forEach(area => {
         const actual = getActualMTD(orders, currentMonth, currentDay, { area });
