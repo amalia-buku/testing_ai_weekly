@@ -737,6 +737,7 @@ console.log('🏷️ Will show labels at indices:', Array.from(labelIndices));
     borderWidth: 1,
     borderRadius: 4,
     padding: 6
+       }
 },
                 scales: {
                     y: {
