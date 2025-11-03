@@ -2446,52 +2446,46 @@ async function buildWeeklyDataFromRaw() {
         'KALIMANTAN', 'SULAWESI', 'SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3'
     ];
     
- allAreas.forEach(area => {
-    const areaData = {
-        weeks: [],  // ✅ Will fill with formatted labels after lookup
-        actualOrders: [],
-        targets: []
-    };
-    
-    weeks.forEach(week => {
-        // Use ISO format for lookups
-        const actual = getWeeklyActual(orders, week, { area });
-        const target = getWeeklyTarget(weeklyTargets, week, 'Region', 'All Product', area);
+    allAreas.forEach(area => {
+        const areaData = {
+            weeks: weeks.map(formatWeekLabel),
+            actualOrders: [],
+            targets: []
+        };
         
-        // Store formatted label for display
-        areaData.weeks.push(formatWeekLabel(week));
-        areaData.actualOrders.push(actual);
-        areaData.targets.push(target);
+        weeks.forEach(week => {
+            const actual = getWeeklyActual(orders, week, { area });
+            const target = getWeeklyTarget(weeklyTargets, week, 'Region', 'All Product', area);
+            
+            areaData.actualOrders.push(actual);
+            areaData.targets.push(target);
+        });
+        
+        weeklyData.areas[area] = areaData;
+        console.log(`   ✅ ${area} - ${areaData.actualOrders.length} weeks`);
     });
-    
-    weeklyData.areas[area] = areaData;
-    console.log(`   ✅ ${area} - ${areaData.actualOrders.length} weeks, Sample Target: ${areaData.targets[0]}`);
-});
     
     // ==================== ANDROID AREA LEVEL ====================
     console.log('📊 Building Android Area Level Weekly Data...');
     
-allAreas.forEach(area => {
-    const androidAreaData = {
-        weeks: [],  // ✅ Will fill with formatted labels after lookup
-        actualOrders: [],
-        targets: []
-    };
-    
-    weeks.forEach(week => {
-        // Use ISO format for lookups
-        const actual = getWeeklyActual(orders, week, { area, product: 'Android' });
-        const target = getWeeklyTarget(weeklyTargets, week, 'Region', 'Android', area);
+    allAreas.forEach(area => {
+        const androidAreaData = {
+            weeks: weeks.map(formatWeekLabel),
+            actualOrders: [],
+            targets: []
+        };
         
-        // Store formatted label for display
-        androidAreaData.weeks.push(formatWeekLabel(week));
-        androidAreaData.actualOrders.push(actual);
-        androidAreaData.targets.push(target);
+        weeks.forEach(week => {
+            const actual = getWeeklyActual(orders, week, { area, product: 'Android' });
+            const target = getWeeklyTarget(weeklyTargets, week, 'Region', 'Android', area);
+            
+            androidAreaData.actualOrders.push(actual);
+            androidAreaData.targets.push(target);
+        });
+        
+        weeklyData.androidAreas[area] = androidAreaData;
+        console.log(`   ✅ ${area} ANDROID - ${androidAreaData.actualOrders.length} weeks`);
     });
-    
-    weeklyData.androidAreas[area] = androidAreaData;
-    console.log(`   ✅ ${area} ANDROID - ${androidAreaData.actualOrders.length} weeks, Sample Target: ${androidAreaData.targets[0]}`);
-});
     
     console.log('✅ Weekly data built successfully');
     console.log('📊 Sample National Data:', {
