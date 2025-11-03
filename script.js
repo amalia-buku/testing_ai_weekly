@@ -2367,15 +2367,57 @@ async function buildWeeklyDataFromRaw() {
     console.log(`   ✅ SAKU NON INSURANCE - ${nationalSakuNonIns.actualOrders.length} weeks`);
 
     // ==================== REGIONAL LEVEL ====================
+    // console.log('📊 Building Regional Level Weekly Data...');
+    
+    // const regions = {
+    //     'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
+    //     'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
+    //     'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
+    // };
+    
+    // Object.entries(regions).forEach(([regionName, areaList]) => {
+    //     const regionalData = {
+    //         weeks: weeks.map(formatWeekLabel),
+    //         actualOrders: [],
+    //         targets: []
+    //     };
+        
+    //     weeks.forEach(week => {
+    //         const actual = getWeeklyActual(orders, week, { areas: areaList });
+    //         const target = areaList.reduce((sum, area) => {
+    //             return sum + getWeeklyTarget(weeklyTargets, week, 'Region', 'All Product', area);
+    //         }, 0);
+            
+    //         regionalData.actualOrders.push(actual);
+    //         regionalData.targets.push(target);
+    //     });
+        
+    //     weeklyData.regions[regionName] = regionalData;
+    //     console.log(`   ✅ ${regionName} - ${regionalData.actualOrders.length} weeks`);
+    // });
+    // ==================== REGIONAL LEVEL ====================
     console.log('📊 Building Regional Level Weekly Data...');
     
+    // Map display names to target file area names
     const regions = {
-        'EAST REGION': ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI'],
-        'JAVA REGION': ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3'],
-        'SUMATERA REGION': ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
+        'EAST REGION': {
+            displayName: 'EAST REGION',
+            targetAreaName: 'East Indo',  // ✅ Matches target file
+            areas: ['BALI NUSRA', 'KALIMANTAN', 'SULAWESI']
+        },
+        'JAVA REGION': {
+            displayName: 'JAVA REGION',
+            targetAreaName: 'Java',  // ✅ Matches target file
+            areas: ['JAKARTA', 'JAVA 1', 'JAVA 2', 'JAVA 3']
+        },
+        'SUMATERA REGION': {
+            displayName: 'SUMATERA REGION',
+            targetAreaName: 'Sumatera',  // ✅ Matches target file
+            areas: ['SUMATERA 1', 'SUMATERA 2', 'SUMATERA 3']
+        }
     };
     
-    Object.entries(regions).forEach(([regionName, areaList]) => {
+    Object.entries(regions).forEach(([regionKey, regionConfig]) => {
         const regionalData = {
             weeks: weeks.map(formatWeekLabel),
             actualOrders: [],
@@ -2383,19 +2425,19 @@ async function buildWeeklyDataFromRaw() {
         };
         
         weeks.forEach(week => {
-            const actual = getWeeklyActual(orders, week, { areas: areaList });
-            const target = areaList.reduce((sum, area) => {
-                return sum + getWeeklyTarget(weeklyTargets, week, 'Region', 'All Product', area);
-            }, 0);
+            // Actual orders: sum from individual areas
+            const actual = getWeeklyActual(orders, week, { areas: regionConfig.areas });
+            
+            // Target: Get from Area level (already aggregated)
+            const target = getWeeklyTarget(weeklyTargets, week, 'Area', 'All Product', regionConfig.targetAreaName);
             
             regionalData.actualOrders.push(actual);
             regionalData.targets.push(target);
         });
         
-        weeklyData.regions[regionName] = regionalData;
-        console.log(`   ✅ ${regionName} - ${regionalData.actualOrders.length} weeks`);
+        weeklyData.regions[regionConfig.displayName] = regionalData;
+        console.log(`   ✅ ${regionConfig.displayName} - ${regionalData.actualOrders.length} weeks, Target: ${regionalData.targets[0]}`);
     });
-    
     // ==================== AREA LEVEL ====================
     console.log('📊 Building Area Level Weekly Data...');
     
