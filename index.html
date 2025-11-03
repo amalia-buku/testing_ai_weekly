@@ -1596,65 +1596,166 @@ f<!DOCTYPE html>
 
 </div>
 
-            <!-- Java Region Analysis -->
-            <div class="variable-group" id="java-region-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">Java Region - Complete Analysis (Jakarta + Java 1 + Java 2 + Java 3)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+           <!-- Java Region Analysis -->
+<div class="variable-group" id="java-region-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Java Region - Complete Analysis (Jakarta + Java 1 + Java 2 + Java 3)</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- Java Region Line Chart - Individual Area Trends -->
+    <div class="regional-line-chart">
+        <canvas id="javaRegionLineChart"></canvas>
+    </div>
+
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="javaRegionPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="javaRegionPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
                 </div>
                 
-                <!-- Java Region Line Chart -->
-                <div class="regional-line-chart">
-                    <canvas id="javaRegionLineChart"></canvas>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="javaRegionCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="javaRegionCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
                 </div>
-
-                <!-- Java Region XmR Charts -->
-                <div class="chart-metrics" id="javaRegionMetrics">
-                    <!-- Populated by JavaScript -->
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="javaRegionGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="javaRegionGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
                 </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - Java Region Total Orders</h5>
-                        <canvas id="javaRegionChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - Java Region Moving Range</h5>
-                        <canvas id="javaRegionMRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="javaRegionAlerts"></div>
             </div>
-
-            <!-- Sumatera Region Analysis -->
-            <div class="variable-group" id="sumatera-region-section">
-                <div class="variable-group-header">
-                    <h4 class="variable-title">Sumatera Region - Complete Analysis (Sumatera 1 + Sumatera 2 + Sumatera 3)</h4>
-                    <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
-                </div>
-                
-                <!-- Sumatera Region Line Chart -->
-                <div class="regional-line-chart">
-                    <canvas id="sumateraRegionLineChart"></canvas>
-                </div>
-
-                <!-- Sumatera Region XmR Charts -->
-                <div class="chart-metrics" id="sumateraRegionMetrics">
-                    <!-- Populated by JavaScript -->
-                </div>
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h5>X Chart - Sumatera Region Total Orders</h5>
-                        <canvas id="sumateraRegionChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h5>mR Chart - Sumatera Region Moving Range</h5>
-                        <canvas id="sumateraRegionMRChart"></canvas>
-                    </div>
-                </div>
-                <div class="variable-alerts" id="sumateraRegionAlerts"></div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="javaRegionChart"></canvas>
             </div>
         </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="javaRegionCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="javaRegionCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="javaRegionPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="javaRegionPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="javaRegionAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="javaRegionMonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
+            <!-- Sumatera Region Analysis -->
+<div class="variable-group" id="sumatera-region-section">
+    <div class="variable-group-header">
+        <h4 class="variable-title">Sumatera Region - Complete Analysis (Sumatera 1 + Sumatera 2 + Sumatera 3)</h4>
+        <a href="#executive-summary" class="back-to-summary">Back to Summary</a>
+    </div>
+    
+    <!-- Sumatera Region Line Chart - Individual Area Trends -->
+    <div class="regional-line-chart">
+        <canvas id="sumateraRegionLineChart"></canvas>
+    </div>
 
+    <!-- ==================== SIDE BY SIDE: WEEKLY + MONTHLY ==================== -->
+    <div style="display: flex; gap: 24px; margin-top: 24px;">
+        
+        <!-- ========== LEFT: WEEKLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 50%; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Weekly Performance</h3>
+            
+            <!-- Weekly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Previous Week</div>
+                    <div id="sumateraRegionPreviousValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumateraRegionPreviousLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Current Week</div>
+                    <div id="sumateraRegionCurrentValue" style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">-</div>
+                    <div id="sumateraRegionCurrentLabel" style="font-size: 9px; color: #94a3b8;">-</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Growth from Previous</div>
+                    <div id="sumateraRegionGrowthValue" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">-</div>
+                    <div id="sumateraRegionGrowthLabel" style="font-size: 9px; color: #94a3b8;">Week over Week</div>
+                </div>
+            </div>
+            
+            <!-- Weekly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumateraRegionChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- ========== RIGHT: MONTHLY PERFORMANCE (50%) ========== -->
+        <div style="flex: 0 0 calc(50% - 24px); background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 20px;">Monthly Performance</h3>
+            
+            <!-- Monthly Scorecards -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; background: #f8fafc; padding: 16px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="sumateraRegionCurrentMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Current Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="sumateraRegionCurrentMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 4px;" id="sumateraRegionPreviousMTD">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Previous Month MTD</div>
+                    <div style="font-size: 9px; color: #94a3b8;" id="sumateraRegionPreviousMonthLabel">-</div>
+                </div>
+                
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="sumateraRegionAchievement">-</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748b;">Achievement %</div>
+                </div>
+            </div>
+            
+            <!-- Monthly Chart -->
+            <div style="margin-top: 20px; height: 400px;">
+                <canvas id="sumateraRegionMonthlyChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+    <!-- ========== END SIDE BY SIDE ========== -->
+    
+</div>
         <!-- Product Type Analysis -->
         <div class="chart-section" id="product-analysis">
             <div class="section-header">
